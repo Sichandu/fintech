@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-  <title>₹upe SAVAGE • Bill Aware Wallet</title>
+  <title>₹upe SAVAGE • Profit/Loss + Report</title>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
@@ -65,6 +65,31 @@
       -webkit-background-clip: text;
       color: transparent;
     }
+
+    .pnl-card {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 12px;
+      gap: 12px;
+    }
+    .pnl-item {
+      background: #071a28aa;
+      border-radius: 1.5rem;
+      padding: 8px 12px;
+      text-align: center;
+      flex: 1;
+    }
+    .pnl-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      color: #8bb5cc;
+    }
+    .pnl-number {
+      font-size: 1.4rem;
+      font-weight: 800;
+    }
+    .profit { color: #6effb0; }
+    .loss { color: #ff8888; }
 
     .dual-mic {
       display: flex;
@@ -160,7 +185,7 @@
     .tx-name { background: #0c3b55; padding: 2px 10px; border-radius: 40px; }
     .tx-amount { font-weight: 800; color: #ffbf85; }
     .delete-tx, .delete-bill { background: none; border: none; color: #8bb5cc; cursor: pointer; }
-    .summary-btn {
+    .summary-btn, .report-btn {
       width: 100%;
       background: #1a5f7a;
       border: none;
@@ -168,8 +193,9 @@
       padding: 8px;
       font-weight: 600;
       cursor: pointer;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
+    .report-btn { background: #8b5a2b; margin-bottom: 0; }
     .summary-table {
       width: 100%;
       font-size: 0.7rem;
@@ -223,10 +249,63 @@
       background: #1a6f4a;
       cursor: pointer;
     }
+
+    /* modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #0a1422;
+      border-radius: 2rem;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+      border: 1px solid cyan;
+      font-family: monospace;
+    }
+    .modal-content h3 { margin-bottom: 1rem; }
+    .modal-content pre {
+      background: #010a12;
+      padding: 1rem;
+      border-radius: 1rem;
+      overflow-x: auto;
+      font-size: 0.7rem;
+    }
+    .close-modal {
+      background: #b13e3e;
+      border: none;
+      border-radius: 2rem;
+      padding: 8px 20px;
+      color: white;
+      margin-top: 1rem;
+      cursor: pointer;
+    }
+    .copy-report {
+      background: #1a6f8f;
+      border: none;
+      border-radius: 2rem;
+      padding: 8px 20px;
+      color: white;
+      margin-right: 8px;
+      cursor: pointer;
+    }
+
     @media (max-width: 550px) {
       .two-grid { grid-template-columns: 1fr; }
       .balance-number { font-size: 2.8rem; }
       .dual-mic { flex-direction: column; }
+      .pnl-item { padding: 4px 8px; }
+      .pnl-number { font-size: 1rem; }
     }
     .listening-pulse {
       animation: pulseRing 0.9s infinite;
@@ -240,17 +319,22 @@
 </head>
 <body>
 <div class="nexus">
-  <!-- Balance -->
+  <!-- Balance glass -->
   <div class="glass">
     <div class="balance-area">
       <div class="balance-label"><i class="fas fa-skull-crossbones"></i> WAR CHEST</div>
       <div class="balance-number"><span class="rupee-sym">₹</span><span id="globalBalance">0</span></div>
     </div>
+    <!-- Profit / Loss Today -->
+    <div class="pnl-card">
+      <div class="pnl-item"><div class="pnl-label">💰 TODAY ADDED</div><div class="pnl-number profit" id="todayAdd">₹0</div></div>
+      <div class="pnl-item"><div class="pnl-label">💸 TODAY SPENT</div><div class="pnl-number loss" id="todaySpent">₹0</div></div>
+      <div class="pnl-item"><div class="pnl-label">📈 NET P/L</div><div class="pnl-number" id="todayNet">₹0</div></div>
+    </div>
   </div>
 
-  <!-- DUAL MIC + MANUAL -->
+  <!-- Dual mic + manual -->
   <div class="dual-mic">
-    <!-- SPEND CARD -->
     <div class="mic-card">
       <div id="spendMicBtn" class="mic-btn spend-mic"><i class="fas fa-microphone-alt mic-icon"></i></div>
       <div class="mic-status" id="spendMicStatus">⚡ voice: "chai 10"</div>
@@ -260,7 +344,6 @@
         <button id="manualSpendBtn">Spend</button>
       </div>
     </div>
-    <!-- ADD MONEY CARD -->
     <div class="mic-card">
       <div id="addMicBtn" class="mic-btn add-mic"><i class="fas fa-microphone-alt mic-icon"></i></div>
       <div class="mic-status" id="addMicStatus">💰 voice: "add 200"</div>
@@ -271,16 +354,16 @@
     </div>
   </div>
 
-  <!-- Badass quote -->
+  <!-- Quote -->
   <div class="badass-quote" id="quoteBox"><i class="fas fa-dragon"></i> “Rupees don't grow on trees — they grow in discipline.”</div>
 
-  <!-- Update Balance (no history wipe) -->
+  <!-- Update Balance -->
   <div class="set-balance-row">
     <input type="number" id="updateBalanceInput" placeholder="update balance ₹" value="2500">
     <button id="updateBalanceBtn">⚡ UPDATE BALANCE</button>
   </div>
 
-  <!-- Spend Log & Summary -->
+  <!-- Spend Log & Summary + Report Button -->
   <div class="two-grid">
     <div class="info-panel">
       <h3><i class="fas fa-scroll"></i> SPEND LOG</h3>
@@ -289,11 +372,12 @@
     <div class="info-panel">
       <h3><i class="fas fa-chart-line"></i> SUMMARY</h3>
       <button id="summaryBtn" class="summary-btn"><i class="fas fa-chart-simple"></i> GENERATE SUMMARY</button>
-      <div id="summaryArea" style="max-height:200px; overflow-y:auto;"><div style="font-size:0.7rem; text-align:center;">📊 tap to see breakdown</div></div>
+      <button id="reportBtn" class="report-btn"><i class="fas fa-file-alt"></i> SEE REPORT</button>
+      <div id="summaryArea" style="max-height:180px; overflow-y:auto;"><div style="font-size:0.7rem; text-align:center;">📊 tap to see breakdown</div></div>
     </div>
   </div>
 
-  <!-- BILL TRACKER SECTION -->
+  <!-- Bill Tracker -->
   <div class="glass">
     <h3 style="display:flex; gap:8px; margin-bottom:12px;"><i class="fas fa-calendar-exclamation"></i> BILL WATCHDOG</h3>
     <div class="bill-form">
@@ -301,17 +385,32 @@
       <input type="number" id="billValidity" placeholder="validity (days)" style="width:100px">
       <button id="addBillBtn">➕ ADD BILL</button>
     </div>
-    <div id="billsList" class="bill-scroll">
-      <div style="text-align:center; opacity:0.6;">📭 no bills added</div>
+    <div id="billsList" class="bill-scroll"><div style="text-align:center; opacity:0.6;">📭 no bills added</div></div>
+  </div>
+</div>
+
+<!-- Modal for report -->
+<div id="reportModal" class="modal">
+  <div class="modal-content">
+    <h3><i class="fas fa-chart-line"></i> FINANCIAL REPORT</h3>
+    <pre id="reportText"></pre>
+    <div>
+      <button id="copyReportBtn" class="copy-report"><i class="fas fa-copy"></i> COPY</button>
+      <button id="downloadReportBtn" class="copy-report" style="background:#2b6f4a;"><i class="fas fa-download"></i> DOWNLOAD</button>
+      <button id="closeModalBtn" class="close-modal"><i class="fas fa-times"></i> CLOSE</button>
     </div>
   </div>
 </div>
 
 <script>
-  // ---------- GLOBAL STATE ----------
+  // ---------- STATE ----------
   let balance = 2500;
-  let transactions = [];      // { id, amount, item, timestamp }
-  let bills = [];            // { id, type, validityDays, startDate (ISO), dueDate, endsIn }
+  let transactions = [];      // { id, amount, item, timestamp, type: 'spend' or 'add'? We'll store type. For P/L, we need to know if it's addition. Let's store all actions in a unified array with type.
+  // Actually we already have spends only, but we need to track adds too.
+  // Better: store all financial events: { id, amount, reason, timestamp, type: 'spend'/'add' }
+  let events = [];   // unified ledger
+
+  let bills = [];            // { id, type, validityDays, startDate, dueDate }
 
   // DOM
   const balanceSpan = document.getElementById('globalBalance');
@@ -319,11 +418,36 @@
   const summaryDiv = document.getElementById('summaryArea');
   const quoteBox = document.getElementById('quoteBox');
   const billsContainer = document.getElementById('billsList');
+  const todayAddSpan = document.getElementById('todayAdd');
+  const todaySpentSpan = document.getElementById('todaySpent');
+  const todayNetSpan = document.getElementById('todayNet');
 
   // helpers
   const formatMoney = (val) => Math.floor(val) === val ? val.toString() : val.toFixed(2);
+  const getTodayStart = () => {
+    const d = new Date();
+    d.setHours(0,0,0,0);
+    return d;
+  };
+  function calculateTodayPL() {
+    const todayStart = getTodayStart();
+    let addedToday = 0, spentToday = 0;
+    for (let e of events) {
+      const evDate = new Date(e.timestamp);
+      if (evDate >= todayStart) {
+        if (e.type === 'add') addedToday += e.amount;
+        else if (e.type === 'spend') spentToday += e.amount;
+      }
+    }
+    const netToday = addedToday - spentToday;
+    todayAddSpan.innerText = `₹${formatMoney(addedToday)}`;
+    todaySpentSpan.innerText = `₹${formatMoney(spentToday)}`;
+    todayNetSpan.innerText = `${netToday >= 0 ? '+' : ''}₹${formatMoney(netToday)}`;
+    todayNetSpan.style.color = netToday >= 0 ? '#6effb0' : '#ff8888';
+  }
+
   function persistAll() {
-    localStorage.setItem('savageWalletData', JSON.stringify({ balance, transactions, bills }));
+    localStorage.setItem('savageWalletData', JSON.stringify({ balance, events, bills }));
   }
   function loadAll() {
     const saved = localStorage.getItem('savageWalletData');
@@ -331,9 +455,8 @@
       try {
         const data = JSON.parse(saved);
         balance = typeof data.balance === 'number' ? data.balance : 2500;
-        transactions = Array.isArray(data.transactions) ? data.transactions : [];
+        events = Array.isArray(data.events) ? data.events : [];
         bills = Array.isArray(data.bills) ? data.bills : [];
-        // migrate old bills without startDate? recalc
         bills = bills.filter(b => b && b.type).map(b => {
           if (!b.startDate) b.startDate = new Date().toISOString();
           return b;
@@ -341,66 +464,75 @@
       } catch(e) { resetDefault(); }
     } else { resetDefault(); }
     renderAll();
-    checkBillNotifications(); // on load
+    checkBillNotifications();
+    calculateTodayPL();
   }
   function resetDefault() {
     balance = 2500;
-    transactions = [];
+    events = [];
     bills = [];
     persistAll();
     renderAll();
+    calculateTodayPL();
   }
   function renderAll() {
     balanceSpan.innerText = formatMoney(balance);
-    renderTransactions();
+    renderTransactions(); // shows spends (type=spend) only, but we can show both in log? Keep only spends in spend log for clarity, but we will show adds in report.
     renderBills();
+    calculateTodayPL();
   }
   function renderTransactions() {
-    if (!transactions.length) { txnContainer.innerHTML = `<div style="text-align:center; opacity:0.6;">📭 no spends yet</div>`; return; }
-    txnContainer.innerHTML = transactions.map(tx => `
+    const spendEvents = events.filter(e => e.type === 'spend');
+    if (!spendEvents.length) { txnContainer.innerHTML = `<div style="text-align:center; opacity:0.6;">📭 no spends yet</div>`; return; }
+    txnContainer.innerHTML = spendEvents.map(tx => `
       <div class="tx-item">
-        <div><span class="tx-name">${escapeHtml(tx.item)}</span> <span style="font-size:0.6rem;">${tx.timestamp}</span></div>
+        <div><span class="tx-name">${escapeHtml(tx.reason)}</span> <span style="font-size:0.6rem;">${new Date(tx.timestamp).toLocaleString()}</span></div>
         <div><span class="tx-amount">₹${formatMoney(tx.amount)}</span>
         <button class="delete-tx" data-id="${tx.id}"><i class="fas fa-trash-can"></i></button></div>
       </div>
     `).join('');
     document.querySelectorAll('.delete-tx').forEach(btn => {
-      btn.addEventListener('click', (e) => { const id = btn.getAttribute('data-id'); if(id) deleteTransaction(id); });
+      btn.addEventListener('click', (e) => { const id = btn.getAttribute('data-id'); if(id) deleteEvent(id); });
     });
   }
-  function deleteTransaction(txId) {
-    const idx = transactions.findIndex(t => t.id == txId);
+  function deleteEvent(eventId) {
+    const idx = events.findIndex(e => e.id == eventId);
     if (idx === -1) return;
-    balance += transactions[idx].amount;
-    transactions.splice(idx, 1);
+    const ev = events[idx];
+    if (ev.type === 'spend') balance += ev.amount;
+    else if (ev.type === 'add') balance -= ev.amount;
+    events.splice(idx, 1);
     persistAll(); renderAll();
-    speakMessage(`Refunded ₹${formatMoney(transactions[idx]?.amount)}. New balance ₹${formatMoney(balance)}`);
+    speakMessage(`Removed ${ev.type === 'spend' ? 'spend' : 'addition'} of ₹${formatMoney(ev.amount)}`);
     updateRandomQuote();
   }
 
-  // SPEND & ADD CORE
-  function deductExpense(amount, item) {
-    if (isNaN(amount) || amount <= 0) { speakMessage("Invalid amount", true); return false; }
-    if (!item.trim()) { speakMessage("Item name missing", true); return false; }
-    if (amount > balance) { speakMessage(`Insufficient! You have ₹${formatMoney(balance)}`, true); return false; }
-    balance -= amount;
-    transactions.unshift({ id: Date.now() + Math.random(), amount, item: item.trim(), timestamp: new Date().toLocaleString() });
-    persistAll(); renderAll();
-    const msg = `Sir you spend ${formatMoney(amount)} on ${item}. Remaining balance is ${formatMoney(balance)}`;
-    speakMessage(msg);
-    showToast(`💸 ₹${formatMoney(amount)} for ${item}`);
-    updateRandomQuote();
-    return true;
+  // CORE ACTIONS (unified)
+  function addEvent(type, amount, reason) {
+    if (type === 'spend') {
+      if (isNaN(amount) || amount <= 0) { speakMessage("Invalid amount", true); return false; }
+      if (!reason.trim()) { speakMessage("Item name missing", true); return false; }
+      if (amount > balance) { speakMessage(`Insufficient! You have ₹${formatMoney(balance)}`, true); return false; }
+      balance -= amount;
+      events.unshift({ id: Date.now() + Math.random(), type: 'spend', amount, reason: reason.trim(), timestamp: new Date().toISOString() });
+      persistAll(); renderAll();
+      const msg = `Sir you spend ${formatMoney(amount)} on ${reason}. Remaining balance is ${formatMoney(balance)}`;
+      speakMessage(msg);
+      showToast(`💸 ₹${formatMoney(amount)} for ${reason}`);
+      updateRandomQuote();
+      return true;
+    } else if (type === 'add') {
+      if (isNaN(amount) || amount <= 0) { speakMessage("Enter positive amount", true); return false; }
+      balance += amount;
+      events.unshift({ id: Date.now() + Math.random(), type: 'add', amount, reason: 'Manual/Credit', timestamp: new Date().toISOString() });
+      persistAll(); renderAll();
+      speakMessage(`Added ₹${formatMoney(amount)}. New balance ₹${formatMoney(balance)}`);
+      showToast(`+ ₹${formatMoney(amount)} added`);
+      updateRandomQuote();
+      return true;
+    }
   }
-  function addMoney(amount) {
-    if (isNaN(amount) || amount <= 0) { speakMessage("Enter positive amount", true); return false; }
-    balance += amount;
-    persistAll(); renderAll();
-    speakMessage(`Added ₹${formatMoney(amount)}. New balance ₹${formatMoney(balance)}`);
-    showToast(`+ ₹${formatMoney(amount)} added`);
-    updateRandomQuote();
-    return true;
-  }
+
   function updateBalanceOnly(newBal) {
     if (isNaN(newBal) || newBal < 0) { showToast("Invalid balance", true); return; }
     balance = newBal;
@@ -409,7 +541,7 @@
     showToast(`Balance → ₹${formatMoney(balance)}`);
   }
 
-  // VOICE: spend: "chai 10" (item then amount)
+  // VOICE: spend: "chai 10"
   let spendRecog = null, addRecog = null;
   let spendListening = false, addListening = false;
   function initSpendVoice() {
@@ -419,11 +551,11 @@
     spendRecog.continuous = false; spendRecog.interimResults = false; spendRecog.lang = 'en-IN';
     spendRecog.onstart = () => { spendListening = true; document.getElementById('spendMicStatus').innerHTML = "🎤 listening..."; document.getElementById('spendMicBtn').classList.add('listening-pulse'); };
     spendRecog.onend = () => { spendListening = false; document.getElementById('spendMicStatus').innerHTML = "⚡ voice: 'chai 10'"; document.getElementById('spendMicBtn').classList.remove('listening-pulse'); };
-    spendRecog.onerror = () => { spendListening = false; document.getElementById('spendMicStatus').innerHTML = "⚠️ retry"; showToast("Mic error", true); };
+    spendRecog.onerror = () => { spendListening = false; showToast("Mic error", true); };
     spendRecog.onresult = (ev) => {
       const transcript = ev.results[0][0].transcript;
       const parsed = parseSpend(transcript);
-      if (parsed) deductExpense(parsed.amount, parsed.item);
+      if (parsed) addEvent('spend', parsed.amount, parsed.item);
       else { showToast(`❌ Say "chai 10"`, true); speakMessage("Say item then amount, like chai 10", true); }
     };
     return true;
@@ -448,7 +580,7 @@
     addRecog.onresult = (ev) => {
       const transcript = ev.results[0][0].transcript;
       let amount = parseAdd(transcript);
-      if (amount !== null && amount > 0) addMoney(amount);
+      if (amount !== null && amount > 0) addEvent('add', amount, 'Voice Credit');
       else { showToast(`Say "add 100"`, true); speakMessage("Say add followed by number", true); }
     };
     return true;
@@ -462,29 +594,20 @@
     return null;
   }
 
-  // BILL TRACKER LOGIC (with due dates & notifications)
+  // BILL TRACKER (same as before)
   function addBill(type, validityDays) {
     if (!type.trim() || validityDays <= 0) { showToast("Enter valid bill type & days", true); return; }
     const startDate = new Date();
     const dueDate = new Date(startDate);
     dueDate.setDate(startDate.getDate() + validityDays);
-    const newBill = {
-      id: Date.now(),
-      type: type.trim(),
-      validityDays: validityDays,
-      startDate: startDate.toISOString(),
-      dueDate: dueDate.toISOString()
-    };
-    bills.push(newBill);
-    persistAll();
-    renderBills();
+    bills.push({ id: Date.now(), type: type.trim(), validityDays, startDate: startDate.toISOString(), dueDate: dueDate.toISOString() });
+    persistAll(); renderBills();
     showToast(`📅 Bill "${type}" added, due on ${dueDate.toLocaleDateString()}`);
-    checkBillNotifications(true); // immediate notification for this bill
+    checkBillNotifications(true);
   }
   function deleteBill(billId) {
     bills = bills.filter(b => b.id != billId);
-    persistAll();
-    renderBills();
+    persistAll(); renderBills();
     showToast("Bill removed", false);
   }
   function renderBills() {
@@ -492,14 +615,12 @@
     const now = new Date();
     let html = `<table style="width:100%; font-size:0.7rem; border-collapse:collapse;"><thead><tr><th>Bill type</th><th>Validity</th><th>Ends in</th><th>Next due</th><th></th></tr></thead><tbody>`;
     bills.forEach(b => {
-      const start = new Date(b.startDate);
       const due = new Date(b.dueDate);
       const daysLeft = Math.max(0, Math.ceil((due - now) / (1000*60*60*24)));
       const endsInText = daysLeft === 0 ? "EXPIRED" : `${daysLeft} day${daysLeft!==1?'s':''}`;
       const dueDateStr = due.toLocaleDateString();
       html += `<tr style="border-bottom:1px solid #2f6080;">
-        <td>${escapeHtml(b.type)}</td>
-        <td>${b.validityDays} days</td>
+        <td>${escapeHtml(b.type)}</td><td>${b.validityDays} days</td>
         <td style="color:${daysLeft<=3?'#ff8866':'#88ffaa'}">${endsInText}</td>
         <td>${dueDateStr}</td>
         <td><button class="delete-bill" data-id="${b.id}" style="background:none; border:none; color:#ff8888;"><i class="fas fa-trash"></i></button></td>
@@ -513,41 +634,108 @@
   }
   function checkBillNotifications(forceSpeak = false) {
     const now = new Date();
-    let notified = false;
     for (let b of bills) {
       const due = new Date(b.dueDate);
       const daysLeft = Math.ceil((due - now) / (1000*60*60*24));
       if (daysLeft === 7 || daysLeft === 2 || (daysLeft <= 7 && daysLeft > 0 && forceSpeak)) {
         speakMessage(`Sir, your ${b.type} ends in ${daysLeft} days.`, false);
-        notified = true;
-        break; // speak one at a time to avoid spam
+        break;
       } else if (daysLeft === 1) {
         speakMessage(`Sir, your ${b.type} ends TOMORROW!`, false);
-        notified = true;
         break;
       }
     }
-    if (!notified && forceSpeak === false) return;
   }
 
   // SUMMARY
   function generateSummary() {
-    if (!transactions.length) { summaryDiv.innerHTML = `<div style="text-align:center;">📭 No expenses yet</div>`; return; }
+    const spendEvents = events.filter(e => e.type === 'spend');
+    if (!spendEvents.length) { summaryDiv.innerHTML = `<div style="text-align:center;">📭 No expenses yet</div>`; return; }
     const map = new Map();
-    for (let tx of transactions) {
-      let key = tx.item.toLowerCase();
+    for (let tx of spendEvents) {
+      let key = tx.reason.toLowerCase();
       if (map.has(key)) { let e = map.get(key); e.total += tx.amount; e.count++; }
-      else map.set(key, { itemName: tx.item, total: tx.amount, count: 1 });
+      else map.set(key, { itemName: tx.reason, total: tx.amount, count: 1 });
     }
     let sorted = Array.from(map.values()).sort((a,b)=>b.total - a.total);
     let grand = 0, html = `<table class="summary-table"><thead><tr><th>Item</th><th>Total (₹)</th><th>#</th></tr></thead><tbody>`;
     for (let e of sorted) { html += `<tr><td>${escapeHtml(e.itemName)}</td><td style="color:#ffbf69;">₹${formatMoney(e.total)}</td><td>${e.count}</td></tr>`; grand += e.total; }
-    html += `<tr style="border-top:2px solid #3c8db0;"><td><strong>TOTAL SPENT</strong></td><td><strong>₹${formatMoney(grand)}</strong></td><td>${transactions.length}</td></tr>`;
-    html += `</tbody></table><div style="margin-top:8px;">⚡ balance: ₹${formatMoney(balance)}</div>`;
+    html += `<tr style="border-top:2px solid #3c8db0;"><td><strong>TOTAL SPENT</strong></td><td><strong>₹${formatMoney(grand)}</strong></td><td>${spendEvents.length}</td></tr>`;
+    html += `</tbody></tr><div style="margin-top:8px;">⚡ balance: ₹${formatMoney(balance)}</div>`;
     summaryDiv.innerHTML = html;
   }
 
-  // TTS & UI helpers
+  // REPORT GENERATION
+  function generateReport() {
+    let report = "══════════ ₹upe SAVAGE REPORT ══════════\n";
+    report += `Generated: ${new Date().toLocaleString()}\n`;
+    report += `Current Balance: ₹${formatMoney(balance)}\n`;
+    report += `\n--- TODAY'S ACTIVITY ---\n`;
+    const todayStart = getTodayStart();
+    let addedToday = 0, spentToday = 0;
+    let todayEvents = [];
+    for (let e of events) {
+      if (new Date(e.timestamp) >= todayStart) {
+        todayEvents.push(e);
+        if (e.type === 'add') addedToday += e.amount;
+        else spentToday += e.amount;
+      }
+    }
+    report += `Added: ₹${formatMoney(addedToday)}\nSpent: ₹${formatMoney(spentToday)}\nNet: ${(addedToday-spentToday) >=0 ? '+' : ''}₹${formatMoney(addedToday-spentToday)}\n`;
+    report += `\n--- ALL TRANSACTIONS (${events.length}) ---\n`;
+    events.slice().reverse().forEach(e => {
+      const date = new Date(e.timestamp).toLocaleString();
+      if (e.type === 'spend') report += `💰 SPEND  ₹${formatMoney(e.amount)}  for "${e.reason}"  on ${date}\n`;
+      else report += `💚 ADD    ₹${formatMoney(e.amount)}  (${e.reason}) on ${date}\n`;
+    });
+    report += `\n--- BILLS TRACKER ---\n`;
+    if (bills.length === 0) report += `No active bills.\n`;
+    else {
+      bills.forEach(b => {
+        const due = new Date(b.dueDate).toLocaleDateString();
+        const days = Math.ceil((new Date(b.dueDate) - new Date()) / (1000*60*60*24));
+        report += `📌 ${b.type} | due ${due} (${days} days left)\n`;
+      });
+    }
+    report += `\n--- SPENDING SUMMARY (All time) ---\n`;
+    const spendEvents = events.filter(e => e.type === 'spend');
+    const itemMap = new Map();
+    spendEvents.forEach(tx => {
+      let key = tx.reason.toLowerCase();
+      let amt = tx.amount;
+      itemMap.set(key, (itemMap.get(key) || 0) + amt);
+    });
+    if (itemMap.size) {
+      for (let [item, total] of itemMap.entries()) {
+        report += `${item}: ₹${formatMoney(total)}\n`;
+      }
+    } else report += `No spends recorded.\n`;
+    report += `\n═══════════════════════════════════════\n`;
+    return report;
+  }
+  function showReportModal() {
+    const report = generateReport();
+    const pre = document.getElementById('reportText');
+    pre.innerText = report;
+    document.getElementById('reportModal').style.display = 'flex';
+  }
+  function copyReport() {
+    const report = document.getElementById('reportText').innerText;
+    navigator.clipboard.writeText(report).then(() => showToast("Report copied!", false)).catch(() => showToast("Copy failed", true));
+  }
+  function downloadReport() {
+    const report = generateReport();
+    const blob = new Blob([report], {type: 'text/plain'});
+    const a = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = `rupe_report_${new Date().toISOString().slice(0,19)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("Report downloaded", false);
+  }
+
+  // TTS & UI
   let currentSpeech = null;
   function speakMessage(text, isErr = false) {
     if (window.speechSynthesis) {
@@ -564,27 +752,31 @@
     toast.style.position = 'fixed'; toast.style.bottom = '20px'; toast.style.left = '50%';
     toast.style.transform = 'translateX(-50%)'; toast.style.backgroundColor = isErr ? '#b13e3e' : '#1a6f8f';
     toast.style.color = 'white'; toast.style.padding = '8px 20px'; toast.style.borderRadius = '60px';
-    toast.style.fontSize = '0.8rem'; toast.style.zIndex = '1000'; toast.style.border = '1px solid cyan';
+    toast.style.fontSize = '0.8rem'; toast.style.zIndex = '1001'; toast.style.border = '1px solid cyan';
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 1800);
   }
   function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
-  const quotes = [`🔥 “Rupees don't grow on trees — they grow in discipline.”`, `💰 “Silence the spend impulse. Invest in your future self.”`, `⚔️ “Every rupee saved is a warrior in your army.”`, `🧠 “Poor mindset spends today. Rich mindset spends tomorrow.”`, `👑 “You don't need 100 things. You need 100 chances.”`, `🚀 “Voice is power. Control your cash flow like a beast.”`, `🎯 “Saving is not an option. It's the only weapon.”`];
+  const quotes = [`🔥 “Rupees don't grow on trees — they grow in discipline.”`, `💰 “Silence the spend impulse. Invest in your future self.”`, `⚔️ “Every rupee saved is a warrior.”`, `🧠 “Poor mindset spends today. Rich mindset spends tomorrow.”`, `👑 “You don't need 100 things. You need 100 chances.”`, `🚀 “Voice is power. Control your cash flow like a beast.”`, `🎯 “Saving is not an option. It's the only weapon.”`];
   function updateRandomQuote() { quoteBox.innerHTML = `<i class="fas fa-dragon"></i> “${quotes[Math.floor(Math.random()*quotes.length)]}”`; }
 
   // EVENT LISTENERS
   document.getElementById('spendMicBtn').addEventListener('click', () => { if(!spendRecog) initSpendVoice(); if(spendListening) spendRecog.stop(); try{ spendRecog.start(); }catch(e){ initSpendVoice(); spendRecog?.start(); } });
   document.getElementById('addMicBtn').addEventListener('click', () => { if(!addRecog) initAddVoice(); if(addListening) addRecog.stop(); try{ addRecog.start(); }catch(e){ initAddVoice(); addRecog?.start(); } });
-  document.getElementById('manualSpendBtn').addEventListener('click', () => { let item = document.getElementById('manualSpendItem').value, amt = parseFloat(document.getElementById('manualSpendAmt').value); if(item && amt>0) deductExpense(amt, item); else showToast("Enter item & amount", true); document.getElementById('manualSpendItem').value = ''; document.getElementById('manualSpendAmt').value = ''; });
-  document.getElementById('manualAddBtn').addEventListener('click', () => { let amt = parseFloat(document.getElementById('manualAddAmt').value); if(amt>0) addMoney(amt); else showToast("Enter amount", true); document.getElementById('manualAddAmt').value = ''; });
+  document.getElementById('manualSpendBtn').addEventListener('click', () => { let item = document.getElementById('manualSpendItem').value, amt = parseFloat(document.getElementById('manualSpendAmt').value); if(item && amt>0) addEvent('spend', amt, item); else showToast("Enter item & amount", true); document.getElementById('manualSpendItem').value = ''; document.getElementById('manualSpendAmt').value = ''; });
+  document.getElementById('manualAddBtn').addEventListener('click', () => { let amt = parseFloat(document.getElementById('manualAddAmt').value); if(amt>0) addEvent('add', amt, 'Manual'); else showToast("Enter amount", true); document.getElementById('manualAddAmt').value = ''; });
   document.getElementById('updateBalanceBtn').addEventListener('click', () => { let newBal = parseFloat(document.getElementById('updateBalanceInput').value); if(!isNaN(newBal) && newBal>=0) updateBalanceOnly(newBal); else showToast("Invalid amount", true); });
   document.getElementById('summaryBtn').addEventListener('click', generateSummary);
+  document.getElementById('reportBtn').addEventListener('click', showReportModal);
   document.getElementById('addBillBtn').addEventListener('click', () => { let type = document.getElementById('billType').value, days = parseInt(document.getElementById('billValidity').value); if(type && days>0) addBill(type, days); else showToast("Enter valid bill type & days", true); document.getElementById('billType').value = ''; document.getElementById('billValidity').value = ''; });
+  document.getElementById('closeModalBtn').addEventListener('click', () => document.getElementById('reportModal').style.display = 'none');
+  document.getElementById('copyReportBtn').addEventListener('click', copyReport);
+  document.getElementById('downloadReportBtn').addEventListener('click', downloadReport);
+  window.onclick = (e) => { if (e.target === document.getElementById('reportModal')) document.getElementById('reportModal').style.display = 'none'; };
 
-  // on load
   loadAll();
   initSpendVoice(); initAddVoice();
-  setInterval(() => { renderBills(); checkBillNotifications(false); }, 3600000); // hourly check
+  setInterval(() => { renderBills(); checkBillNotifications(false); calculateTodayPL(); }, 3600000);
   setTimeout(() => checkBillNotifications(false), 500);
 </script>
 </body>
