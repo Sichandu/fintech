@@ -3,781 +3,1219 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-  <title>₹upe SAVAGE • Profit/Loss + Report</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <title>₹upe SAVAGE • Smart Finance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
+    :root {
+      --bg: #050810;
+      --bg2: #080d18;
+      --surface: rgba(10,18,32,0.72);
+      --border: rgba(0,200,255,0.18);
+      --border-glow: rgba(0,200,255,0.45);
+      --cyan: #00c8ff;
+      --cyan-dim: #0090bb;
+      --green: #00ff9d;
+      --red: #ff4f6d;
+      --gold: #ffd166;
+      --purple: #b56aff;
+      --text: #dceeff;
+      --text-dim: #5e8aaa;
+      --radius: 1.4rem;
+      --radius-sm: 0.8rem;
+      --font-display: 'Syne', sans-serif;
+      --font-mono: 'DM Mono', monospace;
     }
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
     body {
-      background: radial-gradient(circle at 10% 20%, #0B0F17 0%, #02050A 100%);
-      font-family: 'Space Grotesk', monospace;
-      color: #EFF6FF;
-      padding: 1rem;
+      background: var(--bg);
+      font-family: var(--font-display);
+      color: var(--text);
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
-    .nexus {
-      max-width: 680px;
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content:''; position:fixed; inset:0; z-index:0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events:none; opacity:0.5;
+    }
+
+    /* ── AMBIENT GLOW ── */
+    .ambient {
+      position:fixed; inset:0; z-index:0; pointer-events:none;
+      background:
+        radial-gradient(ellipse 60% 40% at 20% 10%, rgba(0,200,255,0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 35% at 80% 85%, rgba(181,106,255,0.05) 0%, transparent 65%),
+        radial-gradient(ellipse 40% 30% at 60% 40%, rgba(0,255,157,0.03) 0%, transparent 60%);
+    }
+
+    /* ── LAYOUT ── */
+    .app {
+      position:relative; z-index:1;
+      max-width: 700px;
       margin: 0 auto;
+      padding: 1rem 0.9rem 5rem;
       display: flex;
       flex-direction: column;
-      gap: 1.2rem;
-    }
-
-    .glass {
-      background: rgba(8, 18, 28, 0.65);
-      backdrop-filter: blur(14px);
-      border-radius: 2rem;
-      border: 1px solid rgba(0, 255, 255, 0.3);
-      box-shadow: 0 20px 35px -12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
-      padding: 1.2rem;
-    }
-
-    .balance-area {
-      text-align: center;
-    }
-    .balance-label {
-      font-size: 0.7rem;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: #7bcbff;
-    }
-    .balance-number {
-      font-size: 3.8rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #FFFFFF, #7bcbff, #00c3ff);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      line-height: 1.1;
-    }
-    .rupee-sym {
-      font-size: 2.2rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #FFFFFF, #7bcbff);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-    }
-
-    .pnl-card {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 12px;
-      gap: 12px;
-    }
-    .pnl-item {
-      background: #071a28aa;
-      border-radius: 1.5rem;
-      padding: 8px 12px;
-      text-align: center;
-      flex: 1;
-    }
-    .pnl-label {
-      font-size: 0.6rem;
-      text-transform: uppercase;
-      color: #8bb5cc;
-    }
-    .pnl-number {
-      font-size: 1.4rem;
-      font-weight: 800;
-    }
-    .profit { color: #6effb0; }
-    .loss { color: #ff8888; }
-
-    .dual-mic {
-      display: flex;
-      gap: 1.2rem;
-      flex-wrap: wrap;
-    }
-    .mic-card {
-      flex: 1;
-      background: rgba(0, 20, 30, 0.7);
-      border-radius: 1.8rem;
-      padding: 1rem 0.8rem;
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(0, 210, 255, 0.4);
-    }
-    .mic-btn {
-      width: 70px;
-      height: 70px;
-      margin: 0 auto 10px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: 0.1s;
-      box-shadow: 0 0 12px rgba(0,200,255,0.3);
-    }
-    .mic-btn:active { transform: scale(0.93); }
-    .spend-mic { background: radial-gradient(circle at 30% 20%, #FF4D4D, #B22222); border: 2px solid #ff8888; }
-    .add-mic { background: radial-gradient(circle at 30% 20%, #2E8B57, #1E5A3A); border: 2px solid #6effb0; }
-    .mic-icon { font-size: 2.2rem; color: white; }
-    .mic-status { font-size: 0.65rem; margin-top: 4px; font-weight: 500; text-align: center; }
-    .manual-row {
-      margin-top: 12px;
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    .manual-row input, .manual-row button {
-      background: #07212e;
-      border: 1px solid #2c9ac0;
-      border-radius: 2rem;
-      padding: 6px 10px;
-      color: white;
-      font-size: 0.7rem;
-    }
-    .manual-row button {
-      background: #1a5f7a;
-      cursor: pointer;
-    }
-    .badass-quote {
-      background: linear-gradient(95deg, #0a1423, #010b12);
-      border-radius: 2rem;
-      padding: 0.7rem 1rem;
-      text-align: center;
-      font-weight: 600;
-      font-size: 0.8rem;
-      border-left: 4px solid #ffcc00;
-    }
-    .two-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
       gap: 1rem;
     }
-    .info-panel {
-      background: rgba(5, 15, 24, 0.7);
-      backdrop-filter: blur(8px);
-      border-radius: 1.5rem;
-      padding: 1rem;
-    }
-    .info-panel h3 {
-      font-size: 0.9rem;
-      margin-bottom: 0.8rem;
+
+    /* ── HEADER ── */
+    .header {
       display: flex;
-      gap: 0.5rem;
       align-items: center;
-    }
-    .tx-scroll, .bill-scroll {
-      max-height: 220px;
-      overflow-y: auto;
-    }
-    .tx-item, .bill-item {
-      background: #0a1a28aa;
-      border-radius: 2rem;
-      padding: 8px 12px;
-      margin-bottom: 8px;
-      display: flex;
       justify-content: space-between;
-      align-items: center;
-      border-left: 3px solid cyan;
-      font-size: 0.75rem;
+      padding: 0.8rem 0;
     }
-    .tx-name { background: #0c3b55; padding: 2px 10px; border-radius: 40px; }
-    .tx-amount { font-weight: 800; color: #ffbf85; }
-    .delete-tx, .delete-bill { background: none; border: none; color: #8bb5cc; cursor: pointer; }
-    .summary-btn, .report-btn {
-      width: 100%;
-      background: #1a5f7a;
-      border: none;
-      border-radius: 2rem;
-      padding: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-bottom: 8px;
+    .logo {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      background: linear-gradient(90deg, #fff 0%, var(--cyan) 60%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
     }
-    .report-btn { background: #8b5a2b; margin-bottom: 0; }
-    .summary-table {
-      width: 100%;
-      font-size: 0.7rem;
-      border-collapse: collapse;
+    .logo span { color: var(--gold); -webkit-text-fill-color: var(--gold); }
+    .header-right { display:flex; gap:0.5rem; align-items:center; }
+    .icon-btn {
+      width:36px; height:36px; border-radius:50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; color:var(--text-dim); font-size:0.8rem;
+      transition: border-color 0.2s, color 0.2s;
     }
-    .summary-table td, .summary-table th {
-      padding: 6px 3px;
-      border-bottom: 1px solid #2f6080;
+    .icon-btn:hover { border-color: var(--border-glow); color: var(--cyan); }
+
+    /* ── GLASS CARD ── */
+    .card {
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      box-shadow: 0 4px 32px -8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
     }
-    .set-balance-row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      justify-content: center;
-      background: #020d16aa;
-      border-radius: 3rem;
-      padding: 6px 12px;
-    }
-    .set-balance-row input {
-      background: #07212e;
-      border: 1px solid #2c9ac0;
-      border-radius: 3rem;
-      padding: 8px 14px;
-      width: 130px;
+    .card.glow { border-color: var(--border-glow); box-shadow: 0 0 0 1px rgba(0,200,255,0.08), 0 4px 32px -8px rgba(0,200,255,0.12); }
+
+    /* ── BALANCE HERO ── */
+    .balance-hero {
       text-align: center;
-      color: white;
+      padding: 1.5rem 1rem 1rem;
     }
-    .set-balance-row button {
-      background: #1b6f8f;
-      border: none;
-      border-radius: 2rem;
-      padding: 8px 16px;
-      font-weight: bold;
-      cursor: pointer;
+    .balance-tag {
+      display: inline-flex; align-items:center; gap:6px;
+      background: rgba(0,200,255,0.08);
+      border: 1px solid rgba(0,200,255,0.2);
+      border-radius: 100px;
+      padding: 3px 12px;
+      font-size: 0.6rem;
+      font-family: var(--font-mono);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 0.6rem;
     }
-    .bill-form {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-      align-items: center;
-    }
-    .bill-form input, .bill-form button {
-      background: #07212e;
-      border: 1px solid #2c9ac0;
-      border-radius: 2rem;
-      padding: 8px 12px;
-      color: white;
-    }
-    .bill-form button {
-      background: #1a6f4a;
-      cursor: pointer;
-    }
+    .balance-tag .dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-    /* modal */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.85);
-      backdrop-filter: blur(8px);
-      z-index: 10000;
-      justify-content: center;
-      align-items: center;
+    .balance-num {
+      font-size: clamp(2.8rem, 10vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1;
+      background: linear-gradient(160deg, #fff 0%, var(--cyan) 55%, #7bcbff 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      letter-spacing: -0.02em;
     }
-    .modal-content {
-      background: #0a1422;
-      border-radius: 2rem;
-      max-width: 500px;
-      width: 90%;
-      max-height: 80vh;
-      overflow-y: auto;
-      padding: 1.5rem;
-      border: 1px solid cyan;
-      font-family: monospace;
+    .balance-sym {
+      font-size: 0.55em;
+      font-weight: 700;
+      vertical-align: super;
+      background: inherit; -webkit-background-clip: text; background-clip: text;
     }
-    .modal-content h3 { margin-bottom: 1rem; }
-    .modal-content pre {
-      background: #010a12;
-      padding: 1rem;
-      border-radius: 1rem;
-      overflow-x: auto;
+    .balance-sub {
       font-size: 0.7rem;
-    }
-    .close-modal {
-      background: #b13e3e;
-      border: none;
-      border-radius: 2rem;
-      padding: 8px 20px;
-      color: white;
-      margin-top: 1rem;
-      cursor: pointer;
-    }
-    .copy-report {
-      background: #1a6f8f;
-      border: none;
-      border-radius: 2rem;
-      padding: 8px 20px;
-      color: white;
-      margin-right: 8px;
-      cursor: pointer;
+      color: var(--text-dim);
+      margin-top: 0.3rem;
+      font-family: var(--font-mono);
     }
 
-    @media (max-width: 550px) {
-      .two-grid { grid-template-columns: 1fr; }
-      .balance-number { font-size: 2.8rem; }
-      .dual-mic { flex-direction: column; }
-      .pnl-item { padding: 4px 8px; }
-      .pnl-number { font-size: 1rem; }
+    /* ── PNL ROW ── */
+    .pnl-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.6rem;
+      margin-top: 1rem;
     }
-    .listening-pulse {
-      animation: pulseRing 0.9s infinite;
+    .pnl-pill {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.5rem;
+      text-align: center;
     }
-    @keyframes pulseRing {
-      0% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.6); }
-      70% { box-shadow: 0 0 0 12px rgba(0, 255, 255, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0); }
+    .pnl-label { font-size: 0.55rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-dim); margin-bottom:3px; }
+    .pnl-val { font-size: 1.15rem; font-weight:800; font-family: var(--font-mono); }
+    .c-green { color: var(--green); }
+    .c-red   { color: var(--red); }
+    .c-gold  { color: var(--gold); }
+
+    /* ── SET BALANCE ── */
+    .set-bal-row {
+      display: flex; gap: 0.5rem; align-items: center;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 5px 5px 5px 14px;
     }
+    .set-bal-row input {
+      flex:1; background:none; border:none; outline:none;
+      font-family: var(--font-mono); color:var(--text); font-size:0.75rem;
+      min-width:0;
+    }
+    .set-bal-row input::placeholder { color: var(--text-dim); }
+    .pill-btn {
+      background: linear-gradient(135deg, var(--cyan-dim), #0070a0);
+      border: none; border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 0.7rem; font-weight:700;
+      color: white; cursor:pointer;
+      font-family: var(--font-display);
+      white-space:nowrap;
+      transition: opacity 0.15s;
+    }
+    .pill-btn:active { opacity:0.8; }
+    .pill-btn.danger { background: linear-gradient(135deg,#8b1f2a,#b13e4e); }
+    .pill-btn.success { background: linear-gradient(135deg,#1a6f45,#2a9f65); }
+    .pill-btn.gold { background: linear-gradient(135deg,#8f6a1a,#d4a017); }
+
+    /* ── MIC SECTION ── */
+    .mic-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+    .mic-panel {
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 0.8rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    }
+    .mic-btn {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 1.6rem;
+      border: 2px solid;
+      transition: transform 0.1s;
+      position: relative;
+    }
+    .mic-btn:active { transform: scale(0.9); }
+    .mic-btn.spend {
+      background: radial-gradient(circle at 35% 25%, #ff6b6b, #8b1a1a);
+      border-color: var(--red);
+      box-shadow: 0 0 20px rgba(255,79,109,0.25);
+    }
+    .mic-btn.earn {
+      background: radial-gradient(circle at 35% 25%, #1ede8a, #0a5e35);
+      border-color: var(--green);
+      box-shadow: 0 0 20px rgba(0,255,157,0.2);
+    }
+    .mic-pulse {
+      position:absolute; inset:-6px; border-radius:50%;
+      border: 2px solid currentColor; opacity:0;
+    }
+    .listening .mic-pulse { animation: ripple 1s infinite; }
+    @keyframes ripple {
+      0%{transform:scale(0.9); opacity:0.8}
+      100%{transform:scale(1.4); opacity:0}
+    }
+    .mic-label { font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; }
+    .mic-hint { font-size:0.6rem; color:var(--text-dim); font-family:var(--font-mono); }
+    .mic-status { font-size:0.6rem; color:var(--cyan); font-family:var(--font-mono); min-height:14px; }
+
+    /* ── MANUAL INPUTS ── */
+    .input-row {
+      display:flex; gap:0.4rem; width:100%; margin-top:0.2rem;
+    }
+    .input-row input {
+      flex:1; min-width:0;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 5px 10px;
+      font-size: 0.68rem;
+      color: var(--text);
+      font-family: var(--font-mono);
+      outline: none;
+    }
+    .input-row input:focus { border-color: var(--border-glow); }
+    .input-row input::placeholder { color: var(--text-dim); }
+    .input-row button {
+      background: rgba(0,200,255,0.12);
+      border: 1px solid rgba(0,200,255,0.3);
+      border-radius: 100px;
+      padding: 5px 12px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--cyan);
+      cursor: pointer;
+      white-space:nowrap;
+    }
+    .input-row button:active { background: rgba(0,200,255,0.25); }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex; gap: 0.3rem;
+      background: rgba(0,0,0,0.3);
+      border-radius: 100px;
+      padding: 3px;
+      border: 1px solid var(--border);
+    }
+    .tab {
+      flex:1; text-align:center;
+      padding: 6px 8px;
+      border-radius: 100px;
+      font-size: 0.65rem; font-weight:700;
+      text-transform:uppercase; letter-spacing:0.06em;
+      cursor: pointer; color: var(--text-dim);
+      transition: all 0.2s;
+    }
+    .tab.active {
+      background: linear-gradient(135deg, var(--cyan-dim), #004f70);
+      color: white;
+      box-shadow: 0 2px 12px rgba(0,200,255,0.25);
+    }
+
+    /* ── SECTION HEADER ── */
+    .sec-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom: 0.8rem;
+    }
+    .sec-title {
+      font-size: 0.72rem; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.1em; color:var(--text-dim);
+      display:flex; gap:0.4rem; align-items:center;
+    }
+    .sec-title i { color: var(--cyan); font-size:0.8rem; }
+    .sec-count {
+      background: rgba(0,200,255,0.12);
+      border-radius: 100px;
+      padding: 1px 8px;
+      font-size: 0.6rem;
+      font-family: var(--font-mono);
+      color: var(--cyan);
+    }
+
+    /* ── TRANSACTION LIST ── */
+    .tx-list { max-height: 240px; overflow-y:auto; display:flex; flex-direction:column; gap:0.4rem; }
+    .tx-list::-webkit-scrollbar { width:2px; }
+    .tx-list::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius:4px; }
+
+    .tx-item {
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 0.7rem;
+      gap: 0.5rem;
+      transition: border-color 0.15s;
+    }
+    .tx-item:hover { border-color: var(--border); }
+    .tx-left { display:flex; align-items:center; gap:0.5rem; min-width:0; }
+    .tx-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .tx-dot.spend { background:var(--red); box-shadow:0 0 6px var(--red); }
+    .tx-dot.add { background:var(--green); box-shadow:0 0 6px var(--green); }
+    .tx-info { min-width:0; }
+    .tx-name { font-size:0.72rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px; }
+    .tx-time { font-size:0.55rem; color:var(--text-dim); font-family:var(--font-mono); }
+    .tx-right { display:flex; align-items:center; gap:0.5rem; flex-shrink:0; }
+    .tx-amt { font-size:0.82rem; font-weight:800; font-family:var(--font-mono); }
+    .tx-amt.spend { color:var(--red); }
+    .tx-amt.add { color:var(--green); }
+    .tx-del { background:none; border:none; color:rgba(255,255,255,0.15); cursor:pointer; font-size:0.7rem; transition:color 0.15s; padding:2px 4px; }
+    .tx-del:hover { color:var(--red); }
+
+    /* ── CHART ── */
+    .chart-container { height: 120px; position:relative; margin-top:0.5rem; }
+    canvas { width:100% !important; }
+
+    /* ── SUMMARY TABLE ── */
+    .summary-table {
+      width:100%; border-collapse:collapse; font-size:0.7rem; font-family:var(--font-mono);
+    }
+    .summary-table th {
+      text-align:left; padding:6px 4px;
+      font-size:0.58rem; text-transform:uppercase; letter-spacing:0.08em;
+      color:var(--text-dim); border-bottom:1px solid var(--border);
+    }
+    .summary-table td { padding:7px 4px; border-bottom:1px solid rgba(255,255,255,0.04); }
+    .summary-table tr:last-child td { border-bottom:none; font-weight:700; border-top:1px solid var(--border); }
+    .cat-bar {
+      height:3px; border-radius:2px;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      margin-top:2px;
+    }
+
+    /* ── BILLS ── */
+    .bill-item {
+      display:flex; align-items:center; justify-content:space-between;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.8rem;
+      gap: 0.6rem;
+      margin-bottom: 0.4rem;
+    }
+    .bill-name { font-size:0.75rem; font-weight:600; }
+    .bill-meta { font-size:0.58rem; color:var(--text-dim); font-family:var(--font-mono); }
+    .bill-days { font-size:0.7rem; font-weight:800; font-family:var(--font-mono); }
+    .bill-days.urgent { color:var(--red); }
+    .bill-days.ok { color:var(--green); }
+    .bill-bar-wrap { flex:1; height:4px; background:rgba(255,255,255,0.06); border-radius:2px; }
+    .bill-bar { height:4px; border-radius:2px; transition: width 0.4s; }
+
+    /* ── QUOTE ── */
+    .quote-strip {
+      background: linear-gradient(95deg, rgba(10,20,35,0.9), rgba(2,8,18,0.9));
+      border-left: 3px solid var(--gold);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 0.7rem 1rem;
+      font-size: 0.75rem; font-weight:600;
+      font-style:italic;
+      color: rgba(255,255,255,0.85);
+    }
+
+    /* ── BUDGET GOALS ── */
+    .goal-item {
+      margin-bottom: 0.8rem;
+    }
+    .goal-header { display:flex; justify-content:space-between; margin-bottom:4px; }
+    .goal-name { font-size:0.72rem; font-weight:600; }
+    .goal-pct { font-size:0.65rem; font-family:var(--font-mono); color:var(--text-dim); }
+    .goal-track { height:6px; background:rgba(255,255,255,0.06); border-radius:3px; overflow:hidden; }
+    .goal-fill { height:6px; border-radius:3px; transition:width 0.5s; }
+
+    /* ── MODAL ── */
+    .modal {
+      display:none; position:fixed; inset:0; z-index:9000;
+      background:rgba(0,0,0,0.88); backdrop-filter:blur(12px);
+      justify-content:center; align-items:center; padding:1rem;
+    }
+    .modal.open { display:flex; }
+    .modal-box {
+      background: #0a1424;
+      border: 1px solid var(--border-glow);
+      border-radius: var(--radius);
+      max-width: 520px; width:100%;
+      max-height: 85vh; overflow-y:auto;
+      padding: 1.5rem;
+    }
+    .modal-box h3 { margin-bottom:1rem; font-size:0.9rem; letter-spacing:0.05em; }
+    .modal-box pre {
+      background: #010a12;
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      overflow-x: auto; white-space:pre-wrap; word-break:break-all;
+      color: #a0e0ff; line-height:1.7;
+    }
+    .modal-footer { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:1rem; }
+
+    /* ── EXPORT CSV ── */
+    /* (uses pill-btn gold) */
+
+    /* ── TOAST ── */
+    #toast {
+      position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%) translateY(10px);
+      background: #0d1e30;
+      border: 1px solid var(--border-glow);
+      border-radius: 100px;
+      padding: 8px 20px;
+      font-size:0.75rem; font-weight:600;
+      z-index:99999; opacity:0; pointer-events:none;
+      transition: opacity 0.25s, transform 0.25s;
+      white-space:nowrap;
+    }
+    #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+    #toast.err { border-color: var(--red); color: var(--red); }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position:fixed; bottom:0; left:0; right:0; z-index:100;
+      display:flex;
+      background: rgba(5,8,16,0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom));
+    }
+    .nav-item {
+      flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+      padding:0.4rem; cursor:pointer;
+      color: var(--text-dim); font-size:0.55rem;
+      text-transform:uppercase; letter-spacing:0.05em;
+      transition: color 0.2s;
+    }
+    .nav-item i { font-size:1.1rem; }
+    .nav-item.active { color: var(--cyan); }
+    .nav-item.active i { filter: drop-shadow(0 0 6px var(--cyan)); }
+
+    /* ── SECTIONS ── */
+    .section { display:none; flex-direction:column; gap:0.8rem; }
+    .section.active { display:flex; }
+
+    /* ── EMPTY STATE ── */
+    .empty { text-align:center; padding:1.5rem; color:var(--text-dim); font-size:0.75rem; }
+    .empty i { font-size:2rem; display:block; margin-bottom:0.5rem; opacity:0.3; }
+
+    /* ── SETTINGS ITEMS ── */
+    .setting-row {
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 0.7rem 0; border-bottom:1px solid rgba(255,255,255,0.05);
+    }
+    .setting-label { font-size:0.75rem; font-weight:600; }
+    .setting-sub { font-size:0.6rem; color:var(--text-dim); margin-top:2px; }
+    .toggle {
+      width:40px; height:22px; border-radius:11px;
+      background: rgba(255,255,255,0.08); border:1px solid var(--border);
+      position:relative; cursor:pointer; transition:background 0.2s;
+    }
+    .toggle.on { background: var(--cyan-dim); border-color: var(--cyan); }
+    .toggle::after {
+      content:''; position:absolute; top:3px; left:3px;
+      width:14px; height:14px; border-radius:50%;
+      background:white; transition:transform 0.2s;
+    }
+    .toggle.on::after { transform:translateX(18px); }
+
+    /* ── BUDGET FORM ── */
+    .budget-form {
+      display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.5rem;
+    }
+    .budget-form input {
+      flex:1; min-width:80px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 12px; font-size:0.68rem;
+      color:var(--text); font-family:var(--font-mono); outline:none;
+    }
+
+    @media (max-width: 480px) {
+      .mic-btn { width:52px; height:52px; font-size:1.3rem; }
+      .balance-num { font-size:2.6rem; }
+      .pnl-val { font-size:1rem; }
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(8px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .card, .mic-panel { animation: fadeUp 0.35s ease both; }
   </style>
 </head>
 <body>
-<div class="nexus">
-  <!-- Balance glass -->
-  <div class="glass">
-    <div class="balance-area">
-      <div class="balance-label"><i class="fas fa-skull-crossbones"></i> WAR CHEST</div>
-      <div class="balance-number"><span class="rupee-sym">₹</span><span id="globalBalance">0</span></div>
-    </div>
-    <!-- Profit / Loss Today -->
-    <div class="pnl-card">
-      <div class="pnl-item"><div class="pnl-label">💰 TODAY ADDED</div><div class="pnl-number profit" id="todayAdd">₹0</div></div>
-      <div class="pnl-item"><div class="pnl-label">💸 TODAY SPENT</div><div class="pnl-number loss" id="todaySpent">₹0</div></div>
-      <div class="pnl-item"><div class="pnl-label">📈 NET P/L</div><div class="pnl-number" id="todayNet">₹0</div></div>
+<div class="ambient"></div>
+
+<!-- ── APP SHELL ── -->
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">₹upe <span>SAVAGE</span></div>
+    <div class="header-right">
+      <div class="icon-btn" onclick="showReportModal()" title="Report"><i class="fas fa-file-chart-column"></i></div>
+      <div class="icon-btn" onclick="switchTab('settings')" title="Settings"><i class="fas fa-sliders"></i></div>
     </div>
   </div>
 
-  <!-- Dual mic + manual -->
-  <div class="dual-mic">
-    <div class="mic-card">
-      <div id="spendMicBtn" class="mic-btn spend-mic"><i class="fas fa-microphone-alt mic-icon"></i></div>
-      <div class="mic-status" id="spendMicStatus">⚡ voice: "chai 10"</div>
-      <div class="manual-row">
-        <input type="text" id="manualSpendItem" placeholder="item" style="flex:1">
-        <input type="number" id="manualSpendAmt" placeholder="₹" style="width:70px">
-        <button id="manualSpendBtn">Spend</button>
+  <!-- ═══════════════ HOME ═══════════════ -->
+  <div id="sec-home" class="section active">
+
+    <!-- Balance Card -->
+    <div class="card glow">
+      <div class="balance-hero">
+        <div class="balance-tag"><span class="dot"></span> war chest · live</div>
+        <div class="balance-num"><span class="balance-sym">₹</span><span id="globalBalance">0</span></div>
+        <div class="balance-sub" id="balanceDateStr"></div>
+      </div>
+      <div class="pnl-row">
+        <div class="pnl-pill"><div class="pnl-label">Added</div><div class="pnl-val c-green" id="todayAdd">₹0</div></div>
+        <div class="pnl-pill"><div class="pnl-label">Spent</div><div class="pnl-val c-red" id="todaySpent">₹0</div></div>
+        <div class="pnl-pill"><div class="pnl-label">Net P/L</div><div class="pnl-val" id="todayNet">₹0</div></div>
+      </div>
+      <div style="margin-top:0.8rem;">
+        <div class="set-bal-row">
+          <input type="number" id="updateBalanceInput" placeholder="Update balance ₹" inputmode="numeric">
+          <button class="pill-btn" onclick="updateBalanceOnly(parseFloat(document.getElementById('updateBalanceInput').value))">⚡ SET</button>
+        </div>
       </div>
     </div>
-    <div class="mic-card">
-      <div id="addMicBtn" class="mic-btn add-mic"><i class="fas fa-microphone-alt mic-icon"></i></div>
-      <div class="mic-status" id="addMicStatus">💰 voice: "add 200"</div>
-      <div class="manual-row">
-        <input type="number" id="manualAddAmt" placeholder="₹ amount" style="flex:1">
-        <button id="manualAddBtn">Add</button>
+
+    <!-- Quote -->
+    <div class="quote-strip" id="quoteBox">🔥 "Rupees don't grow on trees — they grow in discipline."</div>
+
+    <!-- Voice + Manual -->
+    <div class="mic-grid">
+      <div class="mic-panel">
+        <div class="mic-label" style="color:var(--red)"><i class="fas fa-minus-circle"></i> Spend</div>
+        <div id="spendMicBtn" class="mic-btn spend" onclick="triggerMic('spend')">
+          <i class="fas fa-microphone"></i>
+          <div class="mic-pulse" style="color:var(--red)"></div>
+        </div>
+        <div class="mic-status" id="spendMicStatus">voice: "chai 10"</div>
+        <div class="input-row">
+          <input type="text" id="manualSpendItem" placeholder="item" autocomplete="off">
+          <input type="number" id="manualSpendAmt" placeholder="₹" inputmode="numeric" style="width:60px">
+          <button onclick="doManualSpend()">GO</button>
+        </div>
+      </div>
+      <div class="mic-panel">
+        <div class="mic-label" style="color:var(--green)"><i class="fas fa-plus-circle"></i> Earn</div>
+        <div id="addMicBtn" class="mic-btn earn" onclick="triggerMic('add')">
+          <i class="fas fa-microphone"></i>
+          <div class="mic-pulse" style="color:var(--green)"></div>
+        </div>
+        <div class="mic-status" id="addMicStatus">voice: "add 500"</div>
+        <div class="input-row">
+          <input type="text" id="manualAddNote" placeholder="source (opt)" autocomplete="off">
+          <input type="number" id="manualAddAmt" placeholder="₹" inputmode="numeric" style="width:60px">
+          <button onclick="doManualAdd()">GO</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Quote -->
-  <div class="badass-quote" id="quoteBox"><i class="fas fa-dragon"></i> “Rupees don't grow on trees — they grow in discipline.”</div>
-
-  <!-- Update Balance -->
-  <div class="set-balance-row">
-    <input type="number" id="updateBalanceInput" placeholder="update balance ₹" value="2500">
-    <button id="updateBalanceBtn">⚡ UPDATE BALANCE</button>
-  </div>
-
-  <!-- Spend Log & Summary + Report Button -->
-  <div class="two-grid">
-    <div class="info-panel">
-      <h3><i class="fas fa-scroll"></i> SPEND LOG</h3>
-      <div id="transactionList" class="tx-scroll"><div style="text-align:center; opacity:0.6;">✨ no spends yet</div></div>
+    <!-- Spend Log -->
+    <div class="card">
+      <div class="sec-header">
+        <div class="sec-title"><i class="fas fa-scroll"></i> Spend Log</div>
+        <span class="sec-count" id="txCount">0</span>
+      </div>
+      <div id="transactionList" class="tx-list">
+        <div class="empty"><i class="fas fa-inbox"></i>no transactions yet</div>
+      </div>
     </div>
-    <div class="info-panel">
-      <h3><i class="fas fa-chart-line"></i> SUMMARY</h3>
-      <button id="summaryBtn" class="summary-btn"><i class="fas fa-chart-simple"></i> GENERATE SUMMARY</button>
-      <button id="reportBtn" class="report-btn"><i class="fas fa-file-alt"></i> SEE REPORT</button>
-      <div id="summaryArea" style="max-height:180px; overflow-y:auto;"><div style="font-size:0.7rem; text-align:center;">📊 tap to see breakdown</div></div>
-    </div>
-  </div>
 
-  <!-- Bill Tracker -->
-  <div class="glass">
-    <h3 style="display:flex; gap:8px; margin-bottom:12px;"><i class="fas fa-calendar-exclamation"></i> BILL WATCHDOG</h3>
-    <div class="bill-form">
-      <input type="text" id="billType" placeholder="e.g., Mobile Recharge" style="flex:2">
-      <input type="number" id="billValidity" placeholder="validity (days)" style="width:100px">
-      <button id="addBillBtn">➕ ADD BILL</button>
-    </div>
-    <div id="billsList" class="bill-scroll"><div style="text-align:center; opacity:0.6;">📭 no bills added</div></div>
-  </div>
-</div>
+  </div><!-- /sec-home -->
 
-<!-- Modal for report -->
+  <!-- ═══════════════ ANALYTICS ═══════════════ -->
+  <div id="sec-analytics" class="section">
+    <div class="card">
+      <div class="sec-header">
+        <div class="sec-title"><i class="fas fa-chart-area"></i> Spending Trend</div>
+        <div class="tabs" style="padding:2px;">
+          <div class="tab active" id="chartTab7" onclick="setChartRange(7,this)">7D</div>
+          <div class="tab" id="chartTab30" onclick="setChartRange(30,this)">30D</div>
+          <div class="tab" id="chartTabAll" onclick="setChartRange(0,this)">All</div>
+        </div>
+      </div>
+      <div class="chart-container"><canvas id="spendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="sec-header">
+        <div class="sec-title"><i class="fas fa-table"></i> Category Breakdown</div>
+        <button class="pill-btn" style="font-size:0.6rem; padding:4px 12px;" onclick="buildSummary()">Refresh</button>
+      </div>
+      <div id="summaryArea"><div class="empty"><i class="fas fa-chart-pie"></i>tap refresh</div></div>
+    </div>
+  </div><!-- /sec-analytics -->
+
+  <!-- ═══════════════ BILLS ═══════════════ -->
+  <div id="sec-bills" class="section">
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:0.8rem;"><i class="fas fa-calendar-clock"></i> Bill Watchdog</div>
+      <div class="input-row" style="flex-wrap:wrap;">
+        <input type="text" id="billType" placeholder="Bill name (e.g. Jio)" style="flex:2; min-width:100px;" autocomplete="off">
+        <input type="number" id="billValidity" placeholder="Days" inputmode="numeric" style="width:70px;">
+        <button class="pill-btn success" onclick="addBill()">+ ADD</button>
+      </div>
+      <div id="billsList" style="margin-top:0.8rem;">
+        <div class="empty"><i class="fas fa-calendar-xmark"></i>no bills tracked</div>
+      </div>
+    </div>
+  </div><!-- /sec-bills -->
+
+  <!-- ═══════════════ BUDGET ═══════════════ -->
+  <div id="sec-budget" class="section">
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:0.6rem;"><i class="fas fa-bullseye"></i> Monthly Budget Goals</div>
+      <div style="font-size:0.65rem; color:var(--text-dim); margin-bottom:0.6rem;">Set limits per category. Tracks this month's spending.</div>
+      <div class="budget-form">
+        <input type="text" id="budgetCat" placeholder="Category" autocomplete="off">
+        <input type="number" id="budgetAmt" placeholder="Limit ₹" inputmode="numeric">
+        <button class="pill-btn gold" onclick="addBudgetGoal()">Set Goal</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:0.8rem;"><i class="fas fa-gauge"></i> Progress This Month</div>
+      <div id="budgetGoalsList"><div class="empty"><i class="fas fa-flag"></i>no goals set</div></div>
+    </div>
+  </div><!-- /sec-budget -->
+
+  <!-- ═══════════════ SETTINGS ═══════════════ -->
+  <div id="sec-settings" class="section">
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:0.8rem;"><i class="fas fa-gear"></i> Preferences</div>
+      <div class="setting-row">
+        <div><div class="setting-label">Voice Feedback</div><div class="setting-sub">Speak transactions aloud (TTS)</div></div>
+        <div class="toggle on" id="togTTS" onclick="toggleSetting('tts',this)"></div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Bill Alerts</div><div class="setting-sub">Notify before bill due date</div></div>
+        <div class="toggle on" id="togAlerts" onclick="toggleSetting('alerts',this)"></div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Show Add Events in Log</div><div class="setting-sub">Also display credits in spend log</div></div>
+        <div class="toggle" id="togShowAdd" onclick="toggleSetting('showAdd',this)"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:0.8rem;"><i class="fas fa-database"></i> Data</div>
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <button class="pill-btn gold" onclick="exportCSV()"><i class="fas fa-download"></i> Export CSV</button>
+        <button class="pill-btn" onclick="showReportModal()"><i class="fas fa-file-alt"></i> Full Report</button>
+        <button class="pill-btn danger" onclick="confirmReset()"><i class="fas fa-trash"></i> Reset Data</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:0.6rem;"><i class="fas fa-info-circle"></i> About</div>
+      <div style="font-size:0.7rem; color:var(--text-dim); line-height:1.7;">
+        ₹upe SAVAGE v2.0 · Built for the serious saver.<br>
+        All data stored locally on your device. No servers, no tracking.<br>
+        <span style="color:var(--cyan);">Made with 🔥 for India's wallet warriors.</span>
+      </div>
+    </div>
+  </div><!-- /sec-settings -->
+
+</div><!-- /app -->
+
+<!-- ── BOTTOM NAV ── -->
+<nav class="bottom-nav">
+  <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><i class="fas fa-house"></i>Home</div>
+  <div class="nav-item" id="nav-analytics" onclick="switchTab('analytics')"><i class="fas fa-chart-area"></i>Analytics</div>
+  <div class="nav-item" id="nav-bills" onclick="switchTab('bills')"><i class="fas fa-calendar-check"></i>Bills</div>
+  <div class="nav-item" id="nav-budget" onclick="switchTab('budget')"><i class="fas fa-bullseye"></i>Budget</div>
+</nav>
+
+<!-- ── REPORT MODAL ── -->
 <div id="reportModal" class="modal">
-  <div class="modal-content">
-    <h3><i class="fas fa-chart-line"></i> FINANCIAL REPORT</h3>
+  <div class="modal-box">
+    <h3><i class="fas fa-chart-line" style="color:var(--cyan)"></i> Financial Report</h3>
     <pre id="reportText"></pre>
-    <div>
-      <button id="copyReportBtn" class="copy-report"><i class="fas fa-copy"></i> COPY</button>
-      <button id="downloadReportBtn" class="copy-report" style="background:#2b6f4a;"><i class="fas fa-download"></i> DOWNLOAD</button>
-      <button id="closeModalBtn" class="close-modal"><i class="fas fa-times"></i> CLOSE</button>
+    <div class="modal-footer">
+      <button class="pill-btn" onclick="copyReport()"><i class="fas fa-copy"></i> Copy</button>
+      <button class="pill-btn gold" onclick="downloadReport()"><i class="fas fa-download"></i> Download</button>
+      <button class="pill-btn danger" onclick="closeModal()"><i class="fas fa-times"></i> Close</button>
     </div>
   </div>
 </div>
+
+<!-- TOAST -->
+<div id="toast"></div>
 
 <script>
-  // ---------- STATE ----------
-  let balance = 2500;
-  let transactions = [];      // { id, amount, item, timestamp, type: 'spend' or 'add'? We'll store type. For P/L, we need to know if it's addition. Let's store all actions in a unified array with type.
-  // Actually we already have spends only, but we need to track adds too.
-  // Better: store all financial events: { id, amount, reason, timestamp, type: 'spend'/'add' }
-  let events = [];   // unified ledger
+// ── STATE ──
+let balance = 2500;
+let events = [];
+let bills = [];
+let budgetGoals = [];
+let settings = { tts: true, alerts: true, showAdd: false };
 
-  let bills = [];            // { id, type, validityDays, startDate, dueDate }
+// ── CHART ──
+let chartInstance = null;
+let chartRange = 7;
 
-  // DOM
-  const balanceSpan = document.getElementById('globalBalance');
-  const txnContainer = document.getElementById('transactionList');
-  const summaryDiv = document.getElementById('summaryArea');
-  const quoteBox = document.getElementById('quoteBox');
-  const billsContainer = document.getElementById('billsList');
-  const todayAddSpan = document.getElementById('todayAdd');
-  const todaySpentSpan = document.getElementById('todaySpent');
-  const todayNetSpan = document.getElementById('todayNet');
-
-  // helpers
-  const formatMoney = (val) => Math.floor(val) === val ? val.toString() : val.toFixed(2);
-  const getTodayStart = () => {
-    const d = new Date();
-    d.setHours(0,0,0,0);
-    return d;
-  };
-  function calculateTodayPL() {
-    const todayStart = getTodayStart();
-    let addedToday = 0, spentToday = 0;
-    for (let e of events) {
-      const evDate = new Date(e.timestamp);
-      if (evDate >= todayStart) {
-        if (e.type === 'add') addedToday += e.amount;
-        else if (e.type === 'spend') spentToday += e.amount;
-      }
+// ── PERSIST ──
+function save() {
+  localStorage.setItem('rupeSavage2', JSON.stringify({ balance, events, bills, budgetGoals, settings }));
+}
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem('rupeSavage2') || 'null');
+    if (d) {
+      balance = typeof d.balance === 'number' ? d.balance : 2500;
+      events = Array.isArray(d.events) ? d.events : [];
+      bills = Array.isArray(d.bills) ? d.bills : [];
+      budgetGoals = Array.isArray(d.budgetGoals) ? d.budgetGoals : [];
+      settings = Object.assign({ tts:true, alerts:true, showAdd:false }, d.settings || {});
     }
-    const netToday = addedToday - spentToday;
-    todayAddSpan.innerText = `₹${formatMoney(addedToday)}`;
-    todaySpentSpan.innerText = `₹${formatMoney(spentToday)}`;
-    todayNetSpan.innerText = `${netToday >= 0 ? '+' : ''}₹${formatMoney(netToday)}`;
-    todayNetSpan.style.color = netToday >= 0 ? '#6effb0' : '#ff8888';
-  }
+  } catch(e) { resetDefault(); }
+  applySettings();
+  renderAll();
+  checkBillAlerts();
+  setTimeout(()=>{ buildSpendChart(chartRange); }, 100);
+}
+function resetDefault() { balance=2500; events=[]; bills=[]; budgetGoals=[]; settings={tts:true,alerts:true,showAdd:false}; save(); }
 
-  function persistAll() {
-    localStorage.setItem('savageWalletData', JSON.stringify({ balance, events, bills }));
-  }
-  function loadAll() {
-    const saved = localStorage.getItem('savageWalletData');
-    if (saved) {
-      try {
-        const data = JSON.parse(saved);
-        balance = typeof data.balance === 'number' ? data.balance : 2500;
-        events = Array.isArray(data.events) ? data.events : [];
-        bills = Array.isArray(data.bills) ? data.bills : [];
-        bills = bills.filter(b => b && b.type).map(b => {
-          if (!b.startDate) b.startDate = new Date().toISOString();
-          return b;
-        });
-      } catch(e) { resetDefault(); }
-    } else { resetDefault(); }
-    renderAll();
-    checkBillNotifications();
-    calculateTodayPL();
-  }
-  function resetDefault() {
-    balance = 2500;
-    events = [];
-    bills = [];
-    persistAll();
-    renderAll();
-    calculateTodayPL();
-  }
-  function renderAll() {
-    balanceSpan.innerText = formatMoney(balance);
-    renderTransactions(); // shows spends (type=spend) only, but we can show both in log? Keep only spends in spend log for clarity, but we will show adds in report.
-    renderBills();
-    calculateTodayPL();
-  }
-  function renderTransactions() {
-    const spendEvents = events.filter(e => e.type === 'spend');
-    if (!spendEvents.length) { txnContainer.innerHTML = `<div style="text-align:center; opacity:0.6;">📭 no spends yet</div>`; return; }
-    txnContainer.innerHTML = spendEvents.map(tx => `
-      <div class="tx-item">
-        <div><span class="tx-name">${escapeHtml(tx.reason)}</span> <span style="font-size:0.6rem;">${new Date(tx.timestamp).toLocaleString()}</span></div>
-        <div><span class="tx-amount">₹${formatMoney(tx.amount)}</span>
-        <button class="delete-tx" data-id="${tx.id}"><i class="fas fa-trash-can"></i></button></div>
+// ── FORMAT ──
+const fmt = v => Number.isInteger(v) ? v.toString() : v.toFixed(2);
+const fmt2 = v => Number(v).toFixed(2);
+function todayStart() { const d=new Date(); d.setHours(0,0,0,0); return d; }
+function fmtDate(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return 'just now';
+  if (diff < 3600000) return Math.floor(diff/60000)+'m ago';
+  if (diff < 86400000) return Math.floor(diff/3600000)+'h ago';
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
+function escHtml(s){ return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+
+// ── RENDER ──
+function renderAll() {
+  document.getElementById('globalBalance').innerText = fmt(balance);
+  document.getElementById('balanceDateStr').innerText = new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  calcTodayPL();
+  renderTxList();
+  renderBills();
+  renderBudgetGoals();
+  updateRandomQuote();
+  document.getElementById('txCount').innerText = events.filter(e=>e.type==='spend').length;
+}
+function calcTodayPL() {
+  let a=0,s=0;
+  const ts = todayStart();
+  events.forEach(e => {
+    if (new Date(e.timestamp)>=ts) { if(e.type==='add') a+=e.amount; else s+=e.amount; }
+  });
+  document.getElementById('todayAdd').innerText = '₹'+fmt(a);
+  document.getElementById('todaySpent').innerText = '₹'+fmt(s);
+  const net = a-s;
+  const el = document.getElementById('todayNet');
+  el.innerText = (net>=0?'+':'')+'₹'+fmt(net);
+  el.className = 'pnl-val '+(net>=0?'c-green':'c-red');
+}
+function renderTxList() {
+  const showAdd = settings.showAdd;
+  const list = events.filter(e => e.type==='spend' || (showAdd && e.type==='add'));
+  const el = document.getElementById('transactionList');
+  if (!list.length) { el.innerHTML='<div class="empty"><i class="fas fa-inbox"></i>no transactions yet</div>'; return; }
+  el.innerHTML = list.map(tx => `
+    <div class="tx-item">
+      <div class="tx-left">
+        <div class="tx-dot ${tx.type}"></div>
+        <div class="tx-info">
+          <div class="tx-name">${escHtml(tx.reason)}</div>
+          <div class="tx-time">${fmtDate(tx.timestamp)}</div>
+        </div>
       </div>
-    `).join('');
-    document.querySelectorAll('.delete-tx').forEach(btn => {
-      btn.addEventListener('click', (e) => { const id = btn.getAttribute('data-id'); if(id) deleteEvent(id); });
+      <div class="tx-right">
+        <span class="tx-amt ${tx.type}">${tx.type==='spend'?'-':'+'} ₹${fmt(tx.amount)}</span>
+        <button class="tx-del" onclick="deleteEvent('${tx.id}')"><i class="fas fa-xmark"></i></button>
+      </div>
+    </div>`).join('');
+}
+
+// ── SPEND / ADD ──
+function addEvent(type, amount, reason) {
+  reason = (reason||'').trim();
+  if (isNaN(amount)||amount<=0) { toast('Enter a valid amount',true); return false; }
+  if (type==='spend') {
+    if (!reason) { toast('Item name required',true); return false; }
+    if (amount>balance) { toast(`Not enough! Balance ₹${fmt(balance)}`,true); speak(`Sir, insufficient balance.`,true); return false; }
+    balance -= amount;
+  } else {
+    balance += amount;
+    if (!reason) reason = 'Credit';
+  }
+  events.unshift({ id: String(Date.now())+Math.random(), type, amount, reason, timestamp: new Date().toISOString() });
+  save(); renderAll();
+  if (type==='spend') {
+    speak(`₹${fmt(amount)} spent on ${reason}. Balance ₹${fmt(balance)}.`);
+    toast(`💸 ₹${fmt(amount)} · ${reason}`);
+  } else {
+    speak(`₹${fmt(amount)} added. Balance ₹${fmt(balance)}.`);
+    toast(`✅ +₹${fmt(amount)} added`);
+  }
+  buildSpendChart(chartRange);
+  return true;
+}
+function doManualSpend() {
+  const item = document.getElementById('manualSpendItem').value;
+  const amt = parseFloat(document.getElementById('manualSpendAmt').value);
+  if (addEvent('spend',amt,item)) { document.getElementById('manualSpendItem').value=''; document.getElementById('manualSpendAmt').value=''; }
+}
+function doManualAdd() {
+  const note = document.getElementById('manualAddNote').value||'Manual';
+  const amt = parseFloat(document.getElementById('manualAddAmt').value);
+  if (addEvent('add',amt,note)) { document.getElementById('manualAddNote').value=''; document.getElementById('manualAddAmt').value=''; }
+}
+function updateBalanceOnly(v) {
+  if (isNaN(v)||v<0) { toast('Invalid amount',true); return; }
+  balance=v; save(); renderAll();
+  speak(`Balance set to ₹${fmt(v)}.`);
+  toast(`Balance → ₹${fmt(v)}`);
+  document.getElementById('updateBalanceInput').value='';
+}
+function deleteEvent(id) {
+  const idx = events.findIndex(e=>e.id==id);
+  if (idx===-1) return;
+  const ev = events[idx];
+  if (ev.type==='spend') balance+=ev.amount;
+  else balance-=ev.amount;
+  events.splice(idx,1);
+  save(); renderAll(); buildSpendChart(chartRange);
+  toast('Transaction removed');
+}
+
+// ── VOICE ──
+let recog = { spend:null, add:null };
+let listening = { spend:false, add:false };
+function initVoice(type) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  const r = new SR();
+  r.continuous=false; r.interimResults=false; r.lang='en-IN';
+  r.onstart = ()=>{
+    listening[type]=true;
+    document.getElementById(type==='spend'?'spendMicBtn':'addMicBtn').classList.add('listening');
+    document.getElementById(type==='spend'?'spendMicStatus':'addMicStatus').innerText='🎤 listening…';
+  };
+  r.onend = ()=>{
+    listening[type]=false;
+    document.getElementById(type==='spend'?'spendMicBtn':'addMicBtn').classList.remove('listening');
+    document.getElementById(type==='spend'?'spendMicStatus':'addMicStatus').innerText = type==='spend'?'voice: "chai 10"':'voice: "add 500"';
+  };
+  r.onerror = ()=>{ listening[type]=false; toast('Mic error',true); };
+  r.onresult = (ev)=>{
+    const t = ev.results[0][0].transcript.trim();
+    if (type==='spend') {
+      const p = parseSpend(t);
+      if (p) addEvent('spend',p.amount,p.item);
+      else toast('Say "item amount" e.g. chai 10',true);
+    } else {
+      const a = parseAdd(t);
+      if (a>0) addEvent('add',a,'Voice Credit');
+      else toast('Say "add 200"',true);
+    }
+  };
+  recog[type]=r;
+}
+function triggerMic(type) {
+  if (!recog[type]) initVoice(type);
+  try { if(listening[type]) recog[type].stop(); else recog[type].start(); }
+  catch(e){ initVoice(type); try{recog[type].start();}catch(e2){} }
+}
+function parseSpend(txt) {
+  const m = txt.toLowerCase().match(/^(.+?)\s+(\d+(?:\.\d+)?)\s*$/i);
+  if (m && !m[1].startsWith('add')) return { item:m[1].trim(), amount:parseFloat(m[2]) };
+  return null;
+}
+function parseAdd(txt) {
+  const m = txt.toLowerCase().match(/^(?:add|credit|got|received?|deposit)\s+(\d+(?:\.\d+)?)/i);
+  if (m) return parseFloat(m[1]);
+  const n = txt.match(/^\d+(\.\d+)?$/);
+  return n ? parseFloat(txt) : 0;
+}
+
+// ── BILLS ──
+function addBill() {
+  const type = document.getElementById('billType').value.trim();
+  const days = parseInt(document.getElementById('billValidity').value);
+  if (!type||days<=0) { toast('Enter bill name & validity days',true); return; }
+  const start = new Date();
+  const due = new Date(start); due.setDate(start.getDate()+days);
+  bills.push({ id:Date.now(), type, validityDays:days, startDate:start.toISOString(), dueDate:due.toISOString() });
+  save(); renderBills();
+  document.getElementById('billType').value=''; document.getElementById('billValidity').value='';
+  toast(`📅 ${type} tracked for ${days} days`);
+}
+function deleteBill(id) { bills=bills.filter(b=>b.id!=id); save(); renderBills(); toast('Bill removed'); }
+function renderBills() {
+  const el = document.getElementById('billsList');
+  if (!bills.length) { el.innerHTML='<div class="empty"><i class="fas fa-calendar-xmark"></i>no bills tracked</div>'; return; }
+  const now = new Date();
+  el.innerHTML = bills.map(b=>{
+    const due=new Date(b.dueDate);
+    const start=new Date(b.startDate);
+    const total=(due-start)/(1000*60*60*24);
+    const left=Math.max(0,Math.ceil((due-now)/(1000*60*60*24)));
+    const pct = Math.max(0,Math.min(100, (left/total)*100));
+    const urgent = left<=3;
+    const barColor = urgent ? 'var(--red)' : left<=7 ? 'var(--gold)' : 'var(--green)';
+    const label = left===0?'EXPIRED': left===1?'1 day left':`${left} days`;
+    return `<div class="bill-item">
+      <div>
+        <div class="bill-name">${escHtml(b.type)}</div>
+        <div class="bill-meta">${b.validityDays}d plan · due ${new Date(b.dueDate).toLocaleDateString('en-IN')}</div>
+        <div class="bill-bar-wrap" style="width:100px; margin-top:4px;"><div class="bill-bar" style="width:${pct}%; background:${barColor};"></div></div>
+      </div>
+      <div style="text-align:right;">
+        <div class="bill-days ${urgent?'urgent':'ok'}">${label}</div>
+        <button class="tx-del" style="margin-top:4px;" onclick="deleteBill(${b.id})"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function checkBillAlerts() {
+  if (!settings.alerts) return;
+  const now=new Date();
+  for (let b of bills) {
+    const left=Math.ceil((new Date(b.dueDate)-now)/(1000*60*60*24));
+    if (left<=3&&left>0) { speak(`${b.type} ends in ${left} day${left>1?'s':''}.`); break; }
+    if (left===0) { speak(`${b.type} has expired!`); break; }
+  }
+}
+
+// ── BUDGET GOALS ──
+function addBudgetGoal() {
+  const cat=document.getElementById('budgetCat').value.trim();
+  const amt=parseFloat(document.getElementById('budgetAmt').value);
+  if (!cat||isNaN(amt)||amt<=0) { toast('Enter category & amount',true); return; }
+  budgetGoals=budgetGoals.filter(g=>g.cat.toLowerCase()!==cat.toLowerCase());
+  budgetGoals.push({ cat, limit:amt });
+  save(); renderBudgetGoals();
+  document.getElementById('budgetCat').value=''; document.getElementById('budgetAmt').value='';
+  toast(`Goal set: ${cat} → ₹${fmt(amt)}`);
+}
+function renderBudgetGoals() {
+  const el=document.getElementById('budgetGoalsList');
+  if (!budgetGoals.length) { el.innerHTML='<div class="empty"><i class="fas fa-flag"></i>no goals set</div>'; return; }
+  const monthStart=new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+  el.innerHTML = budgetGoals.map(g=>{
+    const spent=events.filter(e=>e.type==='spend'&&new Date(e.timestamp)>=monthStart&&e.reason.toLowerCase().includes(g.cat.toLowerCase())).reduce((s,e)=>s+e.amount,0);
+    const pct=Math.min(100,(spent/g.limit)*100);
+    const overBudget=spent>g.limit;
+    const color=overBudget?'var(--red)':pct>75?'var(--gold)':'var(--green)';
+    return `<div class="goal-item">
+      <div class="goal-header">
+        <span class="goal-name">${escHtml(g.cat)}</span>
+        <span class="goal-pct" style="color:${color}">₹${fmt(spent)} / ₹${fmt(g.limit)}${overBudget?' ⚠️':''}</span>
+      </div>
+      <div class="goal-track"><div class="goal-fill" style="width:${pct}%; background:${color};"></div></div>
+    </div>`;
+  }).join('');
+}
+
+// ── ANALYTICS ──
+function buildSummary() {
+  const el=document.getElementById('summaryArea');
+  const spends=events.filter(e=>e.type==='spend');
+  if (!spends.length) { el.innerHTML='<div class="empty"><i class="fas fa-chart-pie"></i>no spend data</div>'; return; }
+  const map=new Map();
+  let grand=0;
+  spends.forEach(tx=>{ const k=tx.reason.toLowerCase(); const c=map.get(k)||{label:tx.reason,total:0,count:0}; c.total+=tx.amount; c.count++; grand+=tx.amount; map.set(k,c); });
+  const sorted=[...map.values()].sort((a,b)=>b.total-a.total);
+  el.innerHTML=`<table class="summary-table">
+    <thead><tr><th>Category</th><th>Total</th><th>#</th><th>%</th></tr></thead>
+    <tbody>${sorted.map(r=>`<tr>
+      <td><div>${escHtml(r.label)}</div><div class="cat-bar" style="width:${Math.round(r.total/grand*100)}%"></div></td>
+      <td style="color:var(--gold)">₹${fmt(r.total)}</td>
+      <td style="color:var(--text-dim)">${r.count}</td>
+      <td style="color:var(--purple)">${Math.round(r.total/grand*100)}%</td>
+    </tr>`).join('')}
+    <tr><td><strong>Total</strong></td><td><strong style="color:var(--gold)">₹${fmt(grand)}</strong></td><td>${spends.length}</td><td>100%</td></tr>
+    </tbody></table>`;
+}
+function setChartRange(days,el) {
+  chartRange=days;
+  document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  buildSpendChart(days);
+}
+function buildSpendChart(days) {
+  const canvas=document.getElementById('spendChart');
+  if (!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const now=new Date();
+  let cutoff=new Date(0);
+  if (days>0) { cutoff=new Date(); cutoff.setDate(now.getDate()-days); cutoff.setHours(0,0,0,0); }
+  const relevant=events.filter(e=>e.type==='spend'&&new Date(e.timestamp)>=cutoff);
+  // Group by day
+  const dayMap=new Map();
+  relevant.forEach(e=>{
+    const d=new Date(e.timestamp); d.setHours(0,0,0,0);
+    const k=d.toISOString().slice(0,10);
+    dayMap.set(k,(dayMap.get(k)||0)+e.amount);
+  });
+  if (!dayMap.size) {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.font='0.7rem Syne'; ctx.textAlign='center';
+    ctx.fillText('No spend data for this period',canvas.width/2,50);
+    return;
+  }
+  const sorted=[...dayMap.entries()].sort((a,b)=>a[0]<b[0]?-1:1);
+  const labels=sorted.map(([k])=>{ const d=new Date(k); return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'}); });
+  const data=sorted.map(([,v])=>v);
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new SimpleLineChart(canvas, labels, data);
+}
+
+// ── SIMPLE LINE CHART (no external dep) ──
+class SimpleLineChart {
+  constructor(canvas, labels, data) {
+    this.canvas=canvas; this.labels=labels; this.data=data;
+    this.draw(); this.canvas._chart=this;
+  }
+  destroy() {}
+  draw() {
+    const c=this.canvas, ctx=c.getContext('2d');
+    const dpr=window.devicePixelRatio||1;
+    const rect=c.getBoundingClientRect();
+    c.width=rect.width*dpr; c.height=rect.height*dpr;
+    ctx.scale(dpr,dpr);
+    const W=rect.width, H=rect.height;
+    const pad={top:16,right:12,bottom:28,left:44};
+    const iW=W-pad.left-pad.right, iH=H-pad.top-pad.bottom;
+    const max=Math.max(...this.data)*1.15||100;
+    ctx.clearRect(0,0,W,H);
+    // Grid lines
+    ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){
+      const y=pad.top+(iH/4)*i;
+      ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(W-pad.right,y); ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.font=`${9*dpr/dpr}px DM Mono,monospace`; ctx.textAlign='right';
+      ctx.fillText('₹'+fmt(max-max/4*i), pad.left-4, y+3);
+    }
+    // Gradient fill
+    const grad=ctx.createLinearGradient(0,pad.top,0,pad.top+iH);
+    grad.addColorStop(0,'rgba(0,200,255,0.25)'); grad.addColorStop(1,'rgba(0,200,255,0)');
+    const pts=this.data.map((v,i)=>({ x:pad.left+(i/(this.data.length-1||1))*iW, y:pad.top+iH-(v/max)*iH }));
+    if(pts.length===1) pts.push({x:pts[0].x+iW,y:pts[0].y});
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++){
+      const cx=(pts[i-1].x+pts[i].x)/2;
+      ctx.bezierCurveTo(cx,pts[i-1].y,cx,pts[i].y,pts[i].x,pts[i].y);
+    }
+    ctx.lineTo(pts[pts.length-1].x,pad.top+iH); ctx.lineTo(pts[0].x,pad.top+iH); ctx.closePath();
+    ctx.fillStyle=grad; ctx.fill();
+    // Line
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++){
+      const cx=(pts[i-1].x+pts[i].x)/2;
+      ctx.bezierCurveTo(cx,pts[i-1].y,cx,pts[i].y,pts[i].x,pts[i].y);
+    }
+    ctx.strokeStyle='#00c8ff'; ctx.lineWidth=2; ctx.stroke();
+    // Dots
+    pts.forEach((p,i)=>{
+      ctx.beginPath(); ctx.arc(p.x,p.y,3,0,Math.PI*2);
+      ctx.fillStyle='#00c8ff'; ctx.fill();
     });
+    // X labels (show only every nth)
+    const step=Math.max(1,Math.ceil(this.labels.length/5));
+    ctx.fillStyle='rgba(255,255,255,0.35)'; ctx.textAlign='center'; ctx.font=`${8*dpr/dpr}px DM Mono,monospace`;
+    this.labels.forEach((l,i)=>{ if(i%step===0) ctx.fillText(l, pts[i].x, H-8); });
   }
-  function deleteEvent(eventId) {
-    const idx = events.findIndex(e => e.id == eventId);
-    if (idx === -1) return;
-    const ev = events[idx];
-    if (ev.type === 'spend') balance += ev.amount;
-    else if (ev.type === 'add') balance -= ev.amount;
-    events.splice(idx, 1);
-    persistAll(); renderAll();
-    speakMessage(`Removed ${ev.type === 'spend' ? 'spend' : 'addition'} of ₹${formatMoney(ev.amount)}`);
-    updateRandomQuote();
-  }
+}
 
-  // CORE ACTIONS (unified)
-  function addEvent(type, amount, reason) {
-    if (type === 'spend') {
-      if (isNaN(amount) || amount <= 0) { speakMessage("Invalid amount", true); return false; }
-      if (!reason.trim()) { speakMessage("Item name missing", true); return false; }
-      if (amount > balance) { speakMessage(`Insufficient! You have ₹${formatMoney(balance)}`, true); return false; }
-      balance -= amount;
-      events.unshift({ id: Date.now() + Math.random(), type: 'spend', amount, reason: reason.trim(), timestamp: new Date().toISOString() });
-      persistAll(); renderAll();
-      const msg = `Sir you spend ${formatMoney(amount)} on ${reason}. Remaining balance is ${formatMoney(balance)}`;
-      speakMessage(msg);
-      showToast(`💸 ₹${formatMoney(amount)} for ${reason}`);
-      updateRandomQuote();
-      return true;
-    } else if (type === 'add') {
-      if (isNaN(amount) || amount <= 0) { speakMessage("Enter positive amount", true); return false; }
-      balance += amount;
-      events.unshift({ id: Date.now() + Math.random(), type: 'add', amount, reason: 'Manual/Credit', timestamp: new Date().toISOString() });
-      persistAll(); renderAll();
-      speakMessage(`Added ₹${formatMoney(amount)}. New balance ₹${formatMoney(balance)}`);
-      showToast(`+ ₹${formatMoney(amount)} added`);
-      updateRandomQuote();
-      return true;
-    }
-  }
+// ── REPORT ──
+function generateReport() {
+  let r=`══════════ ₹upe SAVAGE REPORT ══════════\nGenerated: ${new Date().toLocaleString()}\nBalance: ₹${fmt(balance)}\n`;
+  const ts=todayStart(); let a=0,s=0;
+  events.forEach(e=>{ if(new Date(e.timestamp)>=ts){ if(e.type==='add')a+=e.amount; else s+=e.amount; } });
+  r+=`\n── TODAY ──\nAdded: ₹${fmt(a)}\nSpent: ₹${fmt(s)}\nNet:   ${a-s>=0?'+':''}₹${fmt(a-s)}\n`;
+  r+=`\n── TRANSACTIONS (${events.length}) ──\n`;
+  events.forEach(e=>{
+    const d=new Date(e.timestamp).toLocaleString('en-IN');
+    r+=e.type==='spend'?`💸 SPEND  ₹${fmt(e.amount)}  "${e.reason}"  ${d}\n`:`💚 ADD    ₹${fmt(e.amount)}  "${e.reason}"  ${d}\n`;
+  });
+  r+=`\n── BILLS ──\n`;
+  if(!bills.length) r+='(none)\n';
+  bills.forEach(b=>{ const left=Math.ceil((new Date(b.dueDate)-new Date())/(1000*60*60*24)); r+=`📌 ${b.type}  ${left} days left  due ${new Date(b.dueDate).toLocaleDateString()}\n`; });
+  r+=`\n── CATEGORY TOTALS ──\n`;
+  const map=new Map();
+  events.filter(e=>e.type==='spend').forEach(e=>{ const k=e.reason.toLowerCase(); map.set(k,(map.get(k)||0)+e.amount); });
+  [...map.entries()].sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>r+=`  ${k}: ₹${fmt(v)}\n`);
+  r+=`\n═══════════════════════════════════════\n`;
+  return r;
+}
+function showReportModal() { document.getElementById('reportText').innerText=generateReport(); document.getElementById('reportModal').classList.add('open'); }
+function closeModal() { document.getElementById('reportModal').classList.remove('open'); }
+function copyReport() { navigator.clipboard.writeText(document.getElementById('reportText').innerText).then(()=>toast('Copied!')).catch(()=>toast('Copy failed',true)); }
+function downloadReport() {
+  const blob=new Blob([generateReport()],{type:'text/plain'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`rupe_report_${new Date().toISOString().slice(0,10)}.txt`; a.click(); URL.revokeObjectURL(a.href);
+  toast('Report downloaded');
+}
+function exportCSV() {
+  let csv='Date,Type,Reason,Amount\n';
+  events.forEach(e=>{ csv+=`"${new Date(e.timestamp).toLocaleString()}","${e.type}","${e.reason.replace(/"/g,'""')}","${e.amount}"\n`; });
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`rupe_transactions_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
+  toast('CSV exported');
+}
 
-  function updateBalanceOnly(newBal) {
-    if (isNaN(newBal) || newBal < 0) { showToast("Invalid balance", true); return; }
-    balance = newBal;
-    persistAll(); renderAll();
-    speakMessage(`Balance updated to ₹${formatMoney(balance)}.`);
-    showToast(`Balance → ₹${formatMoney(balance)}`);
-  }
+// ── SETTINGS ──
+function applySettings() {
+  ['tts','alerts','showAdd'].forEach(k=>{
+    const el=document.getElementById('tog'+k.charAt(0).toUpperCase()+k.slice(1));
+    if(el) el.classList.toggle('on', !!settings[k]);
+  });
+}
+function toggleSetting(key,el) { settings[key]=!settings[key]; el.classList.toggle('on',settings[key]); save(); }
+function confirmReset() {
+  if(confirm('Reset ALL data? This cannot be undone.')) { resetDefault(); renderAll(); buildSpendChart(chartRange); toast('Data reset'); }
+}
 
-  // VOICE: spend: "chai 10"
-  let spendRecog = null, addRecog = null;
-  let spendListening = false, addListening = false;
-  function initSpendVoice() {
-    if (!('webkitSpeechRecognition' in window)) return false;
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    spendRecog = new SpeechRec();
-    spendRecog.continuous = false; spendRecog.interimResults = false; spendRecog.lang = 'en-IN';
-    spendRecog.onstart = () => { spendListening = true; document.getElementById('spendMicStatus').innerHTML = "🎤 listening..."; document.getElementById('spendMicBtn').classList.add('listening-pulse'); };
-    spendRecog.onend = () => { spendListening = false; document.getElementById('spendMicStatus').innerHTML = "⚡ voice: 'chai 10'"; document.getElementById('spendMicBtn').classList.remove('listening-pulse'); };
-    spendRecog.onerror = () => { spendListening = false; showToast("Mic error", true); };
-    spendRecog.onresult = (ev) => {
-      const transcript = ev.results[0][0].transcript;
-      const parsed = parseSpend(transcript);
-      if (parsed) addEvent('spend', parsed.amount, parsed.item);
-      else { showToast(`❌ Say "chai 10"`, true); speakMessage("Say item then amount, like chai 10", true); }
-    };
-    return true;
-  }
-  function parseSpend(txt) {
-    let lower = txt.trim().toLowerCase();
-    let match = lower.match(/^(.+?)\s+(\d+(?:\.\d+)?)\s*$/i);
-    if (match && !lower.startsWith('add') && !lower.startsWith('credit')) {
-      let item = match[1].trim(), amount = parseFloat(match[2]);
-      if (item && amount > 0) return { item, amount };
-    }
-    return null;
-  }
-  function initAddVoice() {
-    if (!('webkitSpeechRecognition' in window)) return false;
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    addRecog = new SpeechRec();
-    addRecog.continuous = false; addRecog.interimResults = false; addRecog.lang = 'en-IN';
-    addRecog.onstart = () => { addListening = true; document.getElementById('addMicStatus').innerHTML = "🎤 listening..."; document.getElementById('addMicBtn').classList.add('listening-pulse'); };
-    addRecog.onend = () => { addListening = false; document.getElementById('addMicStatus').innerHTML = "💰 voice: 'add 200'"; document.getElementById('addMicBtn').classList.remove('listening-pulse'); };
-    addRecog.onerror = () => { addListening = false; showToast("Add mic error", true); };
-    addRecog.onresult = (ev) => {
-      const transcript = ev.results[0][0].transcript;
-      let amount = parseAdd(transcript);
-      if (amount !== null && amount > 0) addEvent('add', amount, 'Voice Credit');
-      else { showToast(`Say "add 100"`, true); speakMessage("Say add followed by number", true); }
-    };
-    return true;
-  }
-  function parseAdd(text) {
-    let lower = text.trim().toLowerCase();
-    let match = lower.match(/^(?:add|credit|deposit)\s+(\d+(?:\.\d+)?)\s*$/i);
-    if (match) return parseFloat(match[1]);
-    let num = lower.match(/^(\d+(?:\.\d+)?)\s*$/);
-    if (num) return parseFloat(num[1]);
-    return null;
-  }
+// ── TTS ──
+let currentUtterance=null;
+function speak(text,isErr=false) {
+  if(!settings.tts||!window.speechSynthesis) return;
+  if(currentUtterance) window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text); u.rate=0.9; u.lang='en-IN';
+  currentUtterance=u; window.speechSynthesis.speak(u);
+}
 
-  // BILL TRACKER (same as before)
-  function addBill(type, validityDays) {
-    if (!type.trim() || validityDays <= 0) { showToast("Enter valid bill type & days", true); return; }
-    const startDate = new Date();
-    const dueDate = new Date(startDate);
-    dueDate.setDate(startDate.getDate() + validityDays);
-    bills.push({ id: Date.now(), type: type.trim(), validityDays, startDate: startDate.toISOString(), dueDate: dueDate.toISOString() });
-    persistAll(); renderBills();
-    showToast(`📅 Bill "${type}" added, due on ${dueDate.toLocaleDateString()}`);
-    checkBillNotifications(true);
-  }
-  function deleteBill(billId) {
-    bills = bills.filter(b => b.id != billId);
-    persistAll(); renderBills();
-    showToast("Bill removed", false);
-  }
-  function renderBills() {
-    if (!bills.length) { billsContainer.innerHTML = `<div style="text-align:center; opacity:0.6;">📭 no recurring bills</div>`; return; }
-    const now = new Date();
-    let html = `<table style="width:100%; font-size:0.7rem; border-collapse:collapse;"><thead><tr><th>Bill type</th><th>Validity</th><th>Ends in</th><th>Next due</th><th></th></tr></thead><tbody>`;
-    bills.forEach(b => {
-      const due = new Date(b.dueDate);
-      const daysLeft = Math.max(0, Math.ceil((due - now) / (1000*60*60*24)));
-      const endsInText = daysLeft === 0 ? "EXPIRED" : `${daysLeft} day${daysLeft!==1?'s':''}`;
-      const dueDateStr = due.toLocaleDateString();
-      html += `<tr style="border-bottom:1px solid #2f6080;">
-        <td>${escapeHtml(b.type)}</td><td>${b.validityDays} days</td>
-        <td style="color:${daysLeft<=3?'#ff8866':'#88ffaa'}">${endsInText}</td>
-        <td>${dueDateStr}</td>
-        <td><button class="delete-bill" data-id="${b.id}" style="background:none; border:none; color:#ff8888;"><i class="fas fa-trash"></i></button></td>
-      </tr>`;
-    });
-    html += `</tbody></table>`;
-    billsContainer.innerHTML = html;
-    document.querySelectorAll('.delete-bill').forEach(btn => {
-      btn.addEventListener('click', (e) => { const id = btn.getAttribute('data-id'); if(id) deleteBill(id); });
-    });
-  }
-  function checkBillNotifications(forceSpeak = false) {
-    const now = new Date();
-    for (let b of bills) {
-      const due = new Date(b.dueDate);
-      const daysLeft = Math.ceil((due - now) / (1000*60*60*24));
-      if (daysLeft === 7 || daysLeft === 2 || (daysLeft <= 7 && daysLeft > 0 && forceSpeak)) {
-        speakMessage(`Sir, your ${b.type} ends in ${daysLeft} days.`, false);
-        break;
-      } else if (daysLeft === 1) {
-        speakMessage(`Sir, your ${b.type} ends TOMORROW!`, false);
-        break;
-      }
-    }
-  }
+// ── TOAST ──
+let toastTimer=null;
+function toast(msg,isErr=false) {
+  const el=document.getElementById('toast');
+  el.innerText=msg; el.className='show'+(isErr?' err':'');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.className='',2000);
+}
 
-  // SUMMARY
-  function generateSummary() {
-    const spendEvents = events.filter(e => e.type === 'spend');
-    if (!spendEvents.length) { summaryDiv.innerHTML = `<div style="text-align:center;">📭 No expenses yet</div>`; return; }
-    const map = new Map();
-    for (let tx of spendEvents) {
-      let key = tx.reason.toLowerCase();
-      if (map.has(key)) { let e = map.get(key); e.total += tx.amount; e.count++; }
-      else map.set(key, { itemName: tx.reason, total: tx.amount, count: 1 });
-    }
-    let sorted = Array.from(map.values()).sort((a,b)=>b.total - a.total);
-    let grand = 0, html = `<table class="summary-table"><thead><tr><th>Item</th><th>Total (₹)</th><th>#</th></tr></thead><tbody>`;
-    for (let e of sorted) { html += `<tr><td>${escapeHtml(e.itemName)}</td><td style="color:#ffbf69;">₹${formatMoney(e.total)}</td><td>${e.count}</td></tr>`; grand += e.total; }
-    html += `<tr style="border-top:2px solid #3c8db0;"><td><strong>TOTAL SPENT</strong></td><td><strong>₹${formatMoney(grand)}</strong></td><td>${spendEvents.length}</td></tr>`;
-    html += `</tbody></tr><div style="margin-top:8px;">⚡ balance: ₹${formatMoney(balance)}</div>`;
-    summaryDiv.innerHTML = html;
-  }
+// ── QUOTE ──
+const quotes=[
+  '🔥 "Rupees don\'t grow on trees — they grow in discipline."',
+  '💰 "Silence the spend impulse. Invest in your future self."',
+  '⚔️ "Every rupee saved is a warrior."',
+  '🧠 "Poor mindset spends today. Rich mindset seeds tomorrow."',
+  '👑 "You don\'t need 100 things. You need 100 chances."',
+  '🚀 "Control your cash flow like you control your destiny."',
+  '🎯 "Saving is not an option — it\'s the only weapon."',
+  '🏹 "The battle is won before the wallet opens."',
+  '🦾 "Automate discipline. Destroy debt."',
+  '🌟 "Your future self is watching how you spend today."',
+];
+function updateRandomQuote() { document.getElementById('quoteBox').innerText=quotes[Math.floor(Math.random()*quotes.length)]; }
 
-  // REPORT GENERATION
-  function generateReport() {
-    let report = "══════════ ₹upe SAVAGE REPORT ══════════\n";
-    report += `Generated: ${new Date().toLocaleString()}\n`;
-    report += `Current Balance: ₹${formatMoney(balance)}\n`;
-    report += `\n--- TODAY'S ACTIVITY ---\n`;
-    const todayStart = getTodayStart();
-    let addedToday = 0, spentToday = 0;
-    let todayEvents = [];
-    for (let e of events) {
-      if (new Date(e.timestamp) >= todayStart) {
-        todayEvents.push(e);
-        if (e.type === 'add') addedToday += e.amount;
-        else spentToday += e.amount;
-      }
-    }
-    report += `Added: ₹${formatMoney(addedToday)}\nSpent: ₹${formatMoney(spentToday)}\nNet: ${(addedToday-spentToday) >=0 ? '+' : ''}₹${formatMoney(addedToday-spentToday)}\n`;
-    report += `\n--- ALL TRANSACTIONS (${events.length}) ---\n`;
-    events.slice().reverse().forEach(e => {
-      const date = new Date(e.timestamp).toLocaleString();
-      if (e.type === 'spend') report += `💰 SPEND  ₹${formatMoney(e.amount)}  for "${e.reason}"  on ${date}\n`;
-      else report += `💚 ADD    ₹${formatMoney(e.amount)}  (${e.reason}) on ${date}\n`;
-    });
-    report += `\n--- BILLS TRACKER ---\n`;
-    if (bills.length === 0) report += `No active bills.\n`;
-    else {
-      bills.forEach(b => {
-        const due = new Date(b.dueDate).toLocaleDateString();
-        const days = Math.ceil((new Date(b.dueDate) - new Date()) / (1000*60*60*24));
-        report += `📌 ${b.type} | due ${due} (${days} days left)\n`;
-      });
-    }
-    report += `\n--- SPENDING SUMMARY (All time) ---\n`;
-    const spendEvents = events.filter(e => e.type === 'spend');
-    const itemMap = new Map();
-    spendEvents.forEach(tx => {
-      let key = tx.reason.toLowerCase();
-      let amt = tx.amount;
-      itemMap.set(key, (itemMap.get(key) || 0) + amt);
-    });
-    if (itemMap.size) {
-      for (let [item, total] of itemMap.entries()) {
-        report += `${item}: ₹${formatMoney(total)}\n`;
-      }
-    } else report += `No spends recorded.\n`;
-    report += `\n═══════════════════════════════════════\n`;
-    return report;
-  }
-  function showReportModal() {
-    const report = generateReport();
-    const pre = document.getElementById('reportText');
-    pre.innerText = report;
-    document.getElementById('reportModal').style.display = 'flex';
-  }
-  function copyReport() {
-    const report = document.getElementById('reportText').innerText;
-    navigator.clipboard.writeText(report).then(() => showToast("Report copied!", false)).catch(() => showToast("Copy failed", true));
-  }
-  function downloadReport() {
-    const report = generateReport();
-    const blob = new Blob([report], {type: 'text/plain'});
-    const a = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    a.href = url;
-    a.download = `rupe_report_${new Date().toISOString().slice(0,19)}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast("Report downloaded", false);
-  }
+// ── NAV ──
+function switchTab(tab) {
+  ['home','analytics','bills','budget','settings'].forEach(s=>{
+    document.getElementById('sec-'+s).classList.toggle('active',s===tab);
+    const n=document.getElementById('nav-'+s);
+    if(n) n.classList.toggle('active',s===tab);
+  });
+  if(tab==='analytics') { buildSummary(); setTimeout(()=>buildSpendChart(chartRange),50); }
+}
 
-  // TTS & UI
-  let currentSpeech = null;
-  function speakMessage(text, isErr = false) {
-    if (window.speechSynthesis) {
-      if (currentSpeech) window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9; utterance.lang = 'en-IN';
-      currentSpeech = utterance;
-      window.speechSynthesis.speak(utterance);
-    }
-  }
-  function showToast(msg, isErr = false) {
-    let toast = document.createElement('div');
-    toast.innerText = msg;
-    toast.style.position = 'fixed'; toast.style.bottom = '20px'; toast.style.left = '50%';
-    toast.style.transform = 'translateX(-50%)'; toast.style.backgroundColor = isErr ? '#b13e3e' : '#1a6f8f';
-    toast.style.color = 'white'; toast.style.padding = '8px 20px'; toast.style.borderRadius = '60px';
-    toast.style.fontSize = '0.8rem'; toast.style.zIndex = '1001'; toast.style.border = '1px solid cyan';
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 1800);
-  }
-  function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
-  const quotes = [`🔥 “Rupees don't grow on trees — they grow in discipline.”`, `💰 “Silence the spend impulse. Invest in your future self.”`, `⚔️ “Every rupee saved is a warrior.”`, `🧠 “Poor mindset spends today. Rich mindset spends tomorrow.”`, `👑 “You don't need 100 things. You need 100 chances.”`, `🚀 “Voice is power. Control your cash flow like a beast.”`, `🎯 “Saving is not an option. It's the only weapon.”`];
-  function updateRandomQuote() { quoteBox.innerHTML = `<i class="fas fa-dragon"></i> “${quotes[Math.floor(Math.random()*quotes.length)]}”`; }
+// ── MODAL CLOSE ON BACKDROP ──
+document.getElementById('reportModal').addEventListener('click',function(e){ if(e.target===this)closeModal(); });
 
-  // EVENT LISTENERS
-  document.getElementById('spendMicBtn').addEventListener('click', () => { if(!spendRecog) initSpendVoice(); if(spendListening) spendRecog.stop(); try{ spendRecog.start(); }catch(e){ initSpendVoice(); spendRecog?.start(); } });
-  document.getElementById('addMicBtn').addEventListener('click', () => { if(!addRecog) initAddVoice(); if(addListening) addRecog.stop(); try{ addRecog.start(); }catch(e){ initAddVoice(); addRecog?.start(); } });
-  document.getElementById('manualSpendBtn').addEventListener('click', () => { let item = document.getElementById('manualSpendItem').value, amt = parseFloat(document.getElementById('manualSpendAmt').value); if(item && amt>0) addEvent('spend', amt, item); else showToast("Enter item & amount", true); document.getElementById('manualSpendItem').value = ''; document.getElementById('manualSpendAmt').value = ''; });
-  document.getElementById('manualAddBtn').addEventListener('click', () => { let amt = parseFloat(document.getElementById('manualAddAmt').value); if(amt>0) addEvent('add', amt, 'Manual'); else showToast("Enter amount", true); document.getElementById('manualAddAmt').value = ''; });
-  document.getElementById('updateBalanceBtn').addEventListener('click', () => { let newBal = parseFloat(document.getElementById('updateBalanceInput').value); if(!isNaN(newBal) && newBal>=0) updateBalanceOnly(newBal); else showToast("Invalid amount", true); });
-  document.getElementById('summaryBtn').addEventListener('click', generateSummary);
-  document.getElementById('reportBtn').addEventListener('click', showReportModal);
-  document.getElementById('addBillBtn').addEventListener('click', () => { let type = document.getElementById('billType').value, days = parseInt(document.getElementById('billValidity').value); if(type && days>0) addBill(type, days); else showToast("Enter valid bill type & days", true); document.getElementById('billType').value = ''; document.getElementById('billValidity').value = ''; });
-  document.getElementById('closeModalBtn').addEventListener('click', () => document.getElementById('reportModal').style.display = 'none');
-  document.getElementById('copyReportBtn').addEventListener('click', copyReport);
-  document.getElementById('downloadReportBtn').addEventListener('click', downloadReport);
-  window.onclick = (e) => { if (e.target === document.getElementById('reportModal')) document.getElementById('reportModal').style.display = 'none'; };
+// ── INIT ──
+load();
+initVoice('spend'); initVoice('add');
+setInterval(()=>{ renderBills(); checkBillAlerts(); calcTodayPL(); }, 3600000);
 
-  loadAll();
-  initSpendVoice(); initAddVoice();
-  setInterval(() => { renderBills(); checkBillNotifications(false); calculateTodayPL(); }, 3600000);
-  setTimeout(() => checkBillNotifications(false), 500);
+// Resize chart on window resize
+window.addEventListener('resize', ()=>{ if(document.getElementById('sec-analytics').classList.contains('active')) buildSpendChart(chartRange); });
+
+// Enter key on inputs
+document.getElementById('manualSpendAmt').addEventListener('keydown',e=>{ if(e.key==='Enter') doManualSpend(); });
+document.getElementById('manualAddAmt').addEventListener('keydown',e=>{ if(e.key==='Enter') doManualAdd(); });
+document.getElementById('updateBalanceInput').addEventListener('keydown',e=>{ if(e.key==='Enter') updateBalanceOnly(parseFloat(e.target.value)); });
 </script>
 </body>
 </html>
